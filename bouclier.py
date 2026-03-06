@@ -15,14 +15,27 @@ PHI = 1.618033988749895
 
 class Bouclier:
     """Le Bouclier protège la ruche sans l'opprimer.
-    
+
     Sécurité HMAC, registre d'accès, pare-feu et quarantaine.
     Fondé sur φ (le nombre d'or) comme signature mathématique.
+
+    Skills Souverains (Domaine IV — Bouclier Royal):
+      [7] gracier — Réacceptation des butineuses égarées
+      [8] sceller — Scellement au propolis
+      [9] auditer — Inspection royale des cellules
     """
 
     NOM = "Bouclier"
-    VERSION = "0.1.0"
-    
+    VERSION = "0.2.0"
+
+    # Niveaux d'alerte souverains (skill sceller)
+    NIVEAUX_ALERTE = {
+        "vert": "Normal — la ruche bourdonne en paix",
+        "jaune": "Vigilance — menace potentielle detectee",
+        "orange": "Alerte — restriction des acces non essentiels",
+        "rouge": "Siege — seuls les agents critiques operent",
+    }
+
     def __init__(self):
         self.cle_maitre = self._generer_cle_maitre()
         self.registre_jetons = {}  # agent_id -> {jeton, expire, niveau}
@@ -31,6 +44,9 @@ class Bouclier:
         self.tentatives_echouees = {}  # agent_id -> count
         self.MAX_TENTATIVES = 5
         self.actif = True
+        self.niveau_alerte = "vert"  # posture de securite
+        self.sceaux = []             # historique des decrets souverains
+        self.conditions_grace = {}   # agent_id -> conditions de liberation
         self._log("Bouclier activé — φ = {:.6f}".format(PHI))
     
     def _generer_cle_maitre(self):
@@ -184,14 +200,220 @@ class Bouclier:
         attendu = self.generer_watermark(contenu)
         return hmac.compare_digest(watermark, attendu)
     
+    # ================================================================
+    # SKILLS SOUVERAINS — DOMAINE IV : BOUCLIER ROYAL
+    # "Proteger sans dominer, surveiller sans opprimer"
+    # ================================================================
+
+    def gracier(self, agent_id, conditions=None):
+        """[Skill 7] Pardonner un agent en quarantaine.
+
+        Acte judiciaire de la Reine : evaluer la menace, decider
+        liberation (avec ou sans conditions) ou maintien.
+        Justice, pas punition aveugle.
+
+        Args:
+            agent_id: L'agent en quarantaine a evaluer.
+            conditions: Conditions de liberation (optionnel).
+
+        Returns:
+            dict avec decision et justification.
+        """
+        if agent_id not in self.quarantaine:
+            return {
+                "agent_id": agent_id,
+                "decision": "SANS_OBJET",
+                "raison": "Cet agent n'est pas en quarantaine.",
+                "signe_par": "Nu",
+            }
+
+        # Evaluer l'historique
+        tentatives = self.tentatives_echouees.get(agent_id, 0)
+        avait_jeton = agent_id in self.registre_jetons
+
+        # La Reine evalue
+        if tentatives >= self.MAX_TENTATIVES * 2:
+            # Menace grave — maintien
+            self._log(f"GRACE REFUSEE — {agent_id} ({tentatives} echecs)", "ALERTE")
+            return {
+                "agent_id": agent_id,
+                "decision": "MAINTIEN",
+                "raison": f"Trop de tentatives echouees ({tentatives}). La menace persiste.",
+                "tentatives": tentatives,
+                "signe_par": "Nu",
+            }
+
+        # Liberation
+        self.quarantaine.discard(agent_id)
+        self.tentatives_echouees.pop(agent_id, None)
+
+        if conditions:
+            self.conditions_grace[agent_id] = {
+                "conditions": conditions,
+                "date": datetime.now(timezone.utc).isoformat(),
+            }
+
+        self._log(f"GRACE ACCORDEE — {agent_id} libere" +
+                  (f" (conditions: {conditions})" if conditions else ""))
+
+        return {
+            "agent_id": agent_id,
+            "decision": "GRACIE",
+            "raison": "La Reine a juge que la menace est passee.",
+            "conditions": conditions,
+            "nouveau_jeton_requis": True,
+            "signe_par": "Nu",
+        }
+
+    def sceller(self, niveau, raison="Decret souverain"):
+        """[Skill 8] Decret de securite souverain.
+
+        Changer la posture de securite de la ruche entiere.
+        Sceau cryptographique sur le decret.
+
+        Args:
+            niveau: vert, jaune, orange, rouge
+            raison: Justification du changement.
+
+        Returns:
+            dict avec decret scelle et sceau cryptographique.
+        """
+        if niveau not in self.NIVEAUX_ALERTE:
+            return {
+                "resultat": "REJETE",
+                "raison": f"Niveau inconnu: {niveau}. Valides: {list(self.NIVEAUX_ALERTE.keys())}",
+                "signe_par": "Nu",
+            }
+
+        ancien = self.niveau_alerte
+        self.niveau_alerte = niveau
+
+        # Generer un sceau cryptographique
+        contenu_sceau = f"DECRET:{ancien}>{niveau}:{raison}:{time.time()}:{PHI}"
+        sceau = hmac.new(
+            self.cle_maitre.encode(),
+            contenu_sceau.encode(),
+            hashlib.sha256
+        ).hexdigest()[:24]
+
+        decret = {
+            "type": "decret_souverain",
+            "ancien_niveau": ancien,
+            "nouveau_niveau": niveau,
+            "description": self.NIVEAUX_ALERTE[niveau],
+            "raison": raison,
+            "sceau": f"HIVE-SCEAU-{sceau}",
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+        }
+        self.sceaux.append(decret)
+
+        niveau_log = "CRITIQUE" if niveau == "rouge" else "ALERTE" if niveau == "orange" else "INFO"
+        self._log(f"DECRET SCELLE — {ancien} -> {niveau} : {raison}", niveau_log)
+
+        return decret
+
+    def auditer(self, registre=None, memoire=None):
+        """[Skill 9] Surveillance sans oppression.
+
+        Observer les PATTERNS (pas les messages individuels) :
+        comportement agents, sante memoire, conformite aux Lois,
+        equilibre ressources.
+
+        Args:
+            registre: Instance du Registre (optionnel).
+            memoire: Instance de MemoireHive (optionnel).
+
+        Returns:
+            dict avec rapport d'audit complet.
+        """
+        rapport = {
+            "type": "audit_souverain",
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+            "securite": {},
+            "patterns": {},
+            "sante": {},
+            "alertes": [],
+        }
+
+        # Securite — etat du bouclier
+        jetons_actifs = sum(1 for j in self.registre_jetons.values() if j["actif"])
+        jetons_expires = sum(
+            1 for j in self.registre_jetons.values()
+            if time.time() > j["expire"]
+        )
+        rapport["securite"] = {
+            "niveau_alerte": self.niveau_alerte,
+            "jetons_actifs": jetons_actifs,
+            "jetons_expires": jetons_expires,
+            "agents_quarantaine": len(self.quarantaine),
+            "sceaux_emis": len(self.sceaux),
+            "tentatives_echouees_total": sum(self.tentatives_echouees.values()),
+        }
+
+        # Patterns — analyser les evenements
+        evenements_recents = self.journal_acces[-50:]
+        niveaux = {}
+        for e in evenements_recents:
+            n = e.get("niveau", "INFO")
+            niveaux[n] = niveaux.get(n, 0) + 1
+        rapport["patterns"] = {
+            "evenements_recents": len(evenements_recents),
+            "distribution_niveaux": niveaux,
+        }
+
+        # Alertes automatiques
+        if rapport["securite"]["agents_quarantaine"] > 3:
+            rapport["alertes"].append("ATTENTION: Plus de 3 agents en quarantaine")
+        if jetons_expires > jetons_actifs:
+            rapport["alertes"].append("ATTENTION: Plus de jetons expires que actifs")
+        if niveaux.get("CRITIQUE", 0) > 5:
+            rapport["alertes"].append("CRITIQUE: Evenements critiques frequents")
+
+        # Registre — si disponible
+        if registre:
+            etat_reg = registre.etat()
+            rapport["sante"]["registre"] = {
+                "agents_actifs": etat_reg.get("agents_actifs", 0),
+                "total_naissances": etat_reg.get("total_naissances", 0),
+                "total_fondus": etat_reg.get("total_fondus", 0),
+                "taux_activite": etat_reg.get("taux_activite", 0),
+            }
+
+        # Memoire — si disponible
+        if memoire:
+            etat_mem = memoire.etat()
+            rapport["sante"]["memoire"] = {
+                "nectar": etat_mem.get("nectar", {}),
+                "cire": etat_mem.get("cire", {}),
+                "miel": etat_mem.get("miel", {}),
+                "transitions": etat_mem.get("transitions", 0),
+            }
+            # Alerte si nectar est plein a >80%
+            cap = etat_mem.get("nectar", {}).get("capacite", 1000)
+            taille = etat_mem.get("nectar", {}).get("taille", 0)
+            if cap and taille / cap > 0.8:
+                rapport["alertes"].append("ATTENTION: Nectar presque plein (>80%)")
+
+        rapport["bilan"] = (
+            "SAIN" if not rapport["alertes"]
+            else f"{len(rapport['alertes'])} alerte(s) detectee(s)"
+        )
+
+        self._log(f"AUDIT — Bilan: {rapport['bilan']}")
+        return rapport
+
     def etat(self):
         """Retourne l'état actuel du Bouclier."""
         return {
             "nom": self.NOM,
             "version": self.VERSION,
             "actif": self.actif,
+            "niveau_alerte": self.niveau_alerte,
             "agents_autorises": len([j for j in self.registre_jetons.values() if j["actif"]]),
             "en_quarantaine": len(self.quarantaine),
+            "sceaux_emis": len(self.sceaux),
             "evenements_securite": len(self.journal_acces),
             "phi": PHI
         }

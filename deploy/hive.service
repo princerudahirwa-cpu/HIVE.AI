@@ -1,0 +1,31 @@
+# /etc/systemd/system/hive.service
+# HIVE.AI — Service systemd pour la Reine Nu
+# Swarmly SAS · 2026
+#
+# Installation :
+#   sudo cp deploy/hive.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable hive
+#   sudo systemctl start hive
+
+[Unit]
+Description=HIVE.AI - Reine Nu - Bureau de Commandement
+After=network.target
+
+[Service]
+User=hive
+Group=hive
+WorkingDirectory=/opt/hive
+Environment="PATH=/opt/hive/venv/bin"
+EnvironmentFile=/opt/hive/.env
+ExecStart=/opt/hive/venv/bin/gunicorn wsgi:app \
+    --bind 127.0.0.1:5000 \
+    --workers 2 \
+    --timeout 120 \
+    --access-logfile /var/log/hive/access.log \
+    --error-logfile /var/log/hive/error.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

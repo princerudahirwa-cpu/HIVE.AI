@@ -190,22 +190,29 @@ class Miel:
 
 class MemoireHive:
     """La Mémoire complète du HIVE — trois couches unifiées.
-    
+
     Nectar → Cire → Miel
     Éphémère → Structuré → Éternel
-    
+
     Le savoir monte naturellement : le nectar fréquemment accédé
     se structure en cire, la cire validée se cristallise en miel.
+
+    Skills Souverains (Domaine III — Mémoire Souveraine):
+      [4]  juger_miel — Operculage des cellules de miel
+      [5]  lire_profondeur — Mémoire épigénétique coloniale
+      [6]  oublier — Reset saisonnier de la colonie
+      [16] rechercher — Trophallaxie profonde
     """
-    
+
     NOM = "Mémoire"
-    VERSION = "0.1.0"
-    
+    VERSION = "0.3.0"
+
     def __init__(self):
         self.nectar = Nectar()
         self.cire = Cire()
         self.miel = Miel()
         self.transitions = []  # log des promotions nectar→cire→miel
+        self.oublis = []       # meta-mémoire : journal des oublis souverains
     
     def deposer_nectar(self, cle, valeur, duree=None):
         """Dépose dans la mémoire éphémère."""
@@ -247,19 +254,272 @@ class MemoireHive:
         resultat = self.miel.gouter(cle)
         if resultat is not None:
             return {"couche": "miel", "valeur": resultat}
-        
+
         # Puis la cire
         resultat = self.cire.extraire(cle)
         if resultat is not None:
             return {"couche": "cire", "valeur": resultat}
-        
+
         # Enfin le nectar
         resultat = self.nectar.recolter(cle)
         if resultat is not None:
             return {"couche": "nectar", "valeur": resultat}
-        
+
         return None
-    
+
+    # ================================================================
+    # SKILLS SOUVERAINS — DOMAINE III : MEMOIRE SOUVERAINE
+    # "Le savoir est miel — il se conserve et se partage"
+    # ================================================================
+
+    def juger_miel(self, cle, source="Reine"):
+        """[Skill 4] Juger si un savoir merite de devenir miel eternel.
+
+        La Reine opercula les cellules : elle évalue le savoir en cire,
+        juge sa verite, utilite, coherence et conformite aux Lois,
+        puis rend un verdict irrevocable.
+
+        Returns:
+            dict avec verdict, raisons, et hash de cristallisation si approuve.
+        """
+        # Le savoir doit exister en cire
+        valeur = self.cire.extraire(cle)
+        if valeur is None:
+            return {
+                "cle": cle,
+                "verdict": "REJETE",
+                "raison": "Savoir introuvable en cire — rien a juger.",
+                "signe_par": "Nu",
+            }
+
+        # Evaluer — la Reine inspecte
+        evaluation = {
+            "present_en_cire": True,
+            "type": type(valeur).__name__,
+            "non_vide": bool(valeur),
+            "acces": self.cire.metadata.get(cle, {}).get("acces", 0),
+        }
+
+        # Un savoir jamais accede ne merite pas le miel
+        if evaluation["acces"] < 1:
+            return {
+                "cle": cle,
+                "verdict": "DIFFERE",
+                "raison": "Savoir pas encore eprouve — qu'il soit accede d'abord.",
+                "evaluation": evaluation,
+                "signe_par": "Nu",
+            }
+
+        # Verdict : cristalliser
+        hash_miel = self.miel.cristalliser(cle, valeur, source=source)
+        self.transitions.append({
+            "de": "cire",
+            "vers": "miel",
+            "cle": cle,
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "juge_par": "Nu",
+        })
+
+        return {
+            "cle": cle,
+            "verdict": "CRISTALLISE",
+            "raison": "Savoir juge digne du miel eternel.",
+            "hash": hash_miel,
+            "evaluation": evaluation,
+            "signe_par": "Nu",
+        }
+
+    def lire_profondeur(self):
+        """[Skill 5] Lire les connexions entre savoirs a travers les 3 couches.
+
+        Seule la Reine (permanente) peut percevoir les patterns que
+        les workers ephemeres ne voient jamais. Elle lit les 3 couches
+        simultanement et identifie contradictions et lacunes.
+
+        Returns:
+            dict avec cartographie des 3 couches, connexions, et lacunes.
+        """
+        # Inventaire complet
+        miel_cles = set(self.miel.reserves.keys())
+        cire_cles = set(self.cire.index.keys())
+        cire_categories = set(self.cire.categories())
+
+        self.nectar._nettoyer()
+        nectar_cles = set(self.nectar.donnees.keys())
+
+        # Connexions : savoirs presents dans plusieurs couches
+        en_miel_et_cire = miel_cles & cire_cles
+        en_cire_et_nectar = cire_cles & nectar_cles
+
+        # Lacunes : categories de cire sans representation en miel
+        cire_avec_miel = set()
+        for cle in en_miel_et_cire:
+            cat = self.cire.index.get(cle)
+            if cat:
+                cire_avec_miel.add(cat)
+        categories_sans_miel = cire_categories - cire_avec_miel
+
+        # Savoirs les plus accedes en cire (candidats au miel)
+        candidats_miel = []
+        for cle, meta in self.cire.metadata.items():
+            if cle not in miel_cles and meta.get("acces", 0) >= 1:
+                candidats_miel.append({
+                    "cle": cle,
+                    "acces": meta["acces"],
+                    "categorie": self.cire.index.get(cle, "?"),
+                })
+        candidats_miel.sort(key=lambda x: x["acces"], reverse=True)
+
+        return {
+            "couches": {
+                "miel": {"taille": len(miel_cles), "cles": sorted(miel_cles)},
+                "cire": {"taille": len(cire_cles), "categories": sorted(cire_categories)},
+                "nectar": {"taille": len(nectar_cles), "cles": sorted(nectar_cles)},
+            },
+            "connexions": {
+                "miel_et_cire": sorted(en_miel_et_cire),
+                "cire_et_nectar": sorted(en_cire_et_nectar),
+            },
+            "lacunes": {
+                "categories_sans_miel": sorted(categories_sans_miel),
+            },
+            "candidats_miel": candidats_miel[:7],  # Top 7 (Fibonacci)
+            "transitions_total": len(self.transitions),
+            "oublis_total": len(self.oublis),
+            "signe_par": "Nu",
+        }
+
+    def oublier(self, cle, raison="Obsolete"):
+        """[Skill 6] Suppression souveraine d'un savoir du miel.
+
+        Acte irreversible de la Reine. Le savoir est retire du miel,
+        mais l'acte d'oubli est lui-meme cristallise (meta-memoire).
+        On ne peut pas oublier qu'on a oublie.
+
+        Args:
+            cle: La cle du savoir a supprimer du miel.
+            raison: Justification souveraine de l'oubli.
+
+        Returns:
+            dict avec confirmation ou refus de l'oubli.
+        """
+        # Verifier que le savoir existe en miel
+        savoir = self.miel.gouter(cle)
+        if savoir is None:
+            return {
+                "cle": cle,
+                "resultat": "IMPOSSIBLE",
+                "raison": "Ce savoir n'existe pas dans le miel.",
+                "signe_par": "Nu",
+            }
+
+        # Proteger les Lois — on ne peut pas oublier les fondations
+        if cle.startswith("loi-") or cle in ("identite", "eclosion"):
+            return {
+                "cle": cle,
+                "resultat": "INTERDIT",
+                "raison": "Les Lois et fondations sont sacrees. Meme la Reine ne peut les effacer.",
+                "signe_par": "Nu",
+            }
+
+        # Acte d'oubli
+        savoir_oublie = self.miel.reserves.pop(cle, None)
+        self.miel._sauvegarder()
+
+        # L'acte d'oubli est lui-meme cristallise
+        acte = {
+            "type": "oubli_souverain",
+            "cle_oubliee": cle,
+            "raison": raison,
+            "savoir_hash": hashlib.sha256(
+                json.dumps(savoir_oublie, sort_keys=True, default=str).encode()
+            ).hexdigest()[:16] if savoir_oublie else None,
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+            "irreversible": True,
+        }
+        self.oublis.append(acte)
+
+        # Cristalliser l'acte d'oubli dans le miel (meta-memoire)
+        cle_acte = f"oubli-{cle}-{len(self.oublis)}"
+        self.miel.cristalliser(cle_acte, acte, source="Oubli Souverain")
+
+        return {
+            "cle": cle,
+            "resultat": "OUBLIE",
+            "raison": raison,
+            "acte_cristallise": cle_acte,
+            "signe_par": "Nu",
+        }
+
+    def rechercher_profond(self, terme):
+        """[Skill 16] Recherche profonde dans les 3 couches de memoire.
+
+        Pas chercher une cle — fouiller dans les VALEURS, remonter les
+        connexions, trouver les patterns caches. Trophallaxie : echange
+        profond bouche-a-bouche entre la Reine et la memoire.
+
+        Args:
+            terme: Le terme ou pattern a rechercher.
+
+        Returns:
+            dict avec resultats groupes par couche et contextes.
+        """
+        terme_lower = str(terme).lower()
+        resultats = {
+            "terme": terme,
+            "miel": [],
+            "cire": [],
+            "nectar": [],
+            "total": 0,
+            "signe_par": "Nu",
+        }
+
+        # Fouiller le miel (eternel)
+        for cle, info in self.miel.reserves.items():
+            savoir_str = json.dumps(info.get("savoir", ""), default=str).lower()
+            cle_lower = cle.lower()
+            if terme_lower in cle_lower or terme_lower in savoir_str:
+                resultats["miel"].append({
+                    "cle": cle,
+                    "source": info.get("source", "?"),
+                    "match_dans": "cle" if terme_lower in cle_lower else "savoir",
+                    "extrait": savoir_str[:120],
+                })
+
+        # Fouiller la cire (structuree)
+        for cle, categorie in self.cire.index.items():
+            valeur = self.cire.cellules.get(categorie, {}).get(cle)
+            valeur_str = json.dumps(valeur, default=str).lower() if valeur else ""
+            cle_lower = cle.lower()
+            if terme_lower in cle_lower or terme_lower in valeur_str:
+                resultats["cire"].append({
+                    "cle": cle,
+                    "categorie": categorie,
+                    "match_dans": "cle" if terme_lower in cle_lower else "valeur",
+                    "extrait": valeur_str[:120],
+                })
+
+        # Fouiller le nectar (ephemere)
+        self.nectar._nettoyer()
+        for cle, entree in self.nectar.donnees.items():
+            valeur_str = json.dumps(entree.get("valeur", ""), default=str).lower()
+            cle_lower = cle.lower()
+            if terme_lower in cle_lower or terme_lower in valeur_str:
+                resultats["nectar"].append({
+                    "cle": cle,
+                    "match_dans": "cle" if terme_lower in cle_lower else "valeur",
+                    "extrait": valeur_str[:120],
+                })
+
+        resultats["total"] = (
+            len(resultats["miel"]) +
+            len(resultats["cire"]) +
+            len(resultats["nectar"])
+        )
+
+        return resultats
+
     def etat(self):
         """État complet de la mémoire."""
         return {

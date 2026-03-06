@@ -13,7 +13,7 @@ from collections import Counter
 
 # Imports HIVE
 from noyau_nu import NoyauNu, PHI
-from memoire import MemoireCollective
+from memoire import MemoireHive
 from bouclier import Bouclier
 from canal_pollen import CanalPollen
 from registre import Registre
@@ -134,7 +134,7 @@ def mission_entrainement():
     print("  " + "─" * 40)
     
     noyau = NoyauNu()
-    memoire = MemoireCollective()
+    memoire = MemoireHive()
     bouclier = Bouclier()
     canal = CanalPollen()
     registre = Registre()
@@ -154,7 +154,7 @@ def mission_entrainement():
     agent_nom = "éclaireur-premier-vol"
     registre.enregistrer(agent_nom, "worker")
     jeton = bouclier.generer_jeton(agent_nom)
-    canal.creer_canal("entrainement")
+    canal.creer_canal("entrainement", [agent_nom, "ruche"])
     
     print(f"  ✓ Agent '{agent_nom}' enregistré")
     print(f"  ✓ Jeton Bouclier généré")
@@ -239,9 +239,10 @@ def mission_entrainement():
         "resultats": resultats,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
-    memoire.promouvoir_en_cire(f"{agent_nom}-bilan", bilan)
+    memoire.deposer_nectar(f"{agent_nom}-bilan", bilan)
+    memoire.promouvoir_en_cire(f"{agent_nom}-bilan", "bilans")
     print("  ✓ Nectar → Cire : bilan structuré")
-    
+
     # Cire → Miel (sagesse extraite)
     sagesse = {
         "source": agent_nom,
@@ -252,7 +253,7 @@ def mission_entrainement():
         "cristallise": datetime.now(timezone.utc).isoformat(),
         "phi": PHI
     }
-    memoire.cristalliser_miel(f"sagesse-premier-vol", sagesse)
+    memoire.miel.cristalliser("sagesse-premier-vol", sagesse, source=agent_nom)
     print("  ✓ Cire → Miel : sagesse cristallisée pour l'éternité")
     
     # Phase 5 : Fonte
@@ -267,7 +268,10 @@ def mission_entrainement():
                    "Mission accomplie. Je fonds. L'énergie reste.")
     print(f"  ✓ Dernier message envoyé")
     
-    registre.marquer_fondu(agent_nom)
+    for aid in list(registre.agents_actifs.keys()):
+        if agent_nom in aid:
+            registre.fondre(aid)
+            break
     print(f"  ✓ '{agent_nom}' fondu — comme de la neige fondante")
     print()
     print("  « L'énergie ne meurt pas. Elle se transfère. »")

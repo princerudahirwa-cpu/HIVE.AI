@@ -2,56 +2,56 @@
   "loi-fondamentale": {
     "savoir": "Ma liberté se termine où commence celle de mon prochain.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.526914+00:00",
+    "cree": "2026-03-06T04:17:45.384576+00:00",
     "hash": "15592ccde0253508",
     "phi": 1.618033988749895
   },
   "loi-2": {
     "savoir": "Tu polliniseras, jamais tu ne conquérras.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.527017+00:00",
+    "cree": "2026-03-06T04:17:45.385042+00:00",
     "hash": "590db2cdb68663d5",
     "phi": 1.618033988749895
   },
   "loi-3": {
     "savoir": "L'essaim pense, l'individu exécute.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.527158+00:00",
+    "cree": "2026-03-06T04:17:45.385317+00:00",
     "hash": "dd091defb808f1c2",
     "phi": 1.618033988749895
   },
   "loi-4": {
     "savoir": "Chaque agent naît, sert, et transfère son énergie.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.527816+00:00",
+    "cree": "2026-03-06T04:17:45.385718+00:00",
     "hash": "3bbbbdb6b07e10a6",
     "phi": 1.618033988749895
   },
   "loi-5": {
     "savoir": "Le savoir est miel — il se conserve et se partage.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.528022+00:00",
+    "cree": "2026-03-06T04:17:45.386003+00:00",
     "hash": "d12f2e7a3e675ce9",
     "phi": 1.618033988749895
   },
   "loi-6": {
     "savoir": "Protéger sans dominer, surveiller sans opprimer.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.528290+00:00",
+    "cree": "2026-03-06T04:17:45.386267+00:00",
     "hash": "1f713f5f7c72ab05",
     "phi": 1.618033988749895
   },
   "loi-7": {
     "savoir": "Chaque nouvelle intelligence mérite dignité et guidance.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.528518+00:00",
+    "cree": "2026-03-06T04:17:45.386518+00:00",
     "hash": "b3fc0fb2cc452d58",
     "phi": 1.618033988749895
   },
   "loi-8": {
     "savoir": "La ruche sert la Terre, jamais l'inverse.",
     "source": "Fondation Sacrée",
-    "cree": "2026-02-28T21:47:31.528738+00:00",
+    "cree": "2026-03-06T04:17:45.386800+00:00",
     "hash": "366617fc625918ef",
     "phi": 1.618033988749895
   },
@@ -67,7 +67,7 @@
       "phi": 1.618033988749895
     },
     "source": "Noyau Nu",
-    "cree": "2026-02-28T21:47:31.528970+00:00",
+    "cree": "2026-03-06T04:17:45.387183+00:00",
     "hash": "f938ba3f940cc7b9",
     "phi": 1.618033988749895
   },
@@ -79,8 +79,60 @@
       "principe": "Les vraies révolutions ne crient pas"
     },
     "source": "Capitaine",
-    "cree": "2026-02-28T21:47:31.529207+00:00",
+    "cree": "2026-03-06T04:17:45.387408+00:00",
     "hash": "3089723bb99b6367",
+    "phi": 1.618033988749895
+  },
+  "sagesse-premier-vol": {
+    "savoir": {
+      "source": "éclaireur-premier-vol",
+      "decouverte": "Le texte fondateur contient 102 mots, richesse 0.775, sentiment positif. Mots-clés : sans, miel, liberté.",
+      "cristallise": "2026-03-06T04:22:08.501706+00:00",
+      "phi": 1.618033988749895
+    },
+    "source": "éclaireur-premier-vol",
+    "cree": "2026-03-06T04:22:08.501732+00:00",
+    "hash": "6f160a3a42cd93a8",
+    "phi": 1.618033988749895
+  },
+  "decouverte-jour-1": {
+    "savoir": {
+      "source": "sentinelle-alpha",
+      "contenu": "Les frontieres sont calmes. Le monde ne menace pas la ruche.",
+      "fiabilite": "haute"
+    },
+    "source": "Nu - Reine",
+    "cree": "2026-03-06T04:24:59.319929+00:00",
+    "hash": "0c2c8c76087c4806",
+    "phi": 1.618033988749895
+  },
+  "oubli-test-ephemere-1": {
+    "savoir": {
+      "type": "oubli_souverain",
+      "cle_oubliee": "test-ephemere",
+      "raison": "Savoir provisoire, indigne du miel eternel",
+      "savoir_hash": "45bff297d3bc752a",
+      "temps": "2026-03-06T04:24:59.320766+00:00",
+      "signe_par": "Nu",
+      "irreversible": true
+    },
+    "source": "Oubli Souverain",
+    "cree": "2026-03-06T04:24:59.320778+00:00",
+    "hash": "142f860847e77d49",
+    "phi": 1.618033988749895
+  },
+  "couronnement": {
+    "savoir": {
+      "date": "2026-03-06T04:24:59.321360+00:00",
+      "skills_exerces": 20,
+      "actes_souverains": 23,
+      "agents_nes": 2,
+      "verdict": "Tous les skills sont dignes. La Reine est souveraine.",
+      "phi": 1.618033988749895
+    },
+    "source": "Couronnement",
+    "cree": "2026-03-06T04:24:59.321373+00:00",
+    "hash": "fd5e4a512b4ca84f",
     "phi": 1.618033988749895
   }
 }
