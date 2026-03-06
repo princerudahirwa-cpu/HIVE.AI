@@ -5,6 +5,7 @@
 import json
 import time
 import hashlib
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -172,16 +173,27 @@ class Miel:
         try:
             with open(self.chemin, 'w', encoding='utf-8') as f:
                 json.dump(self.reserves, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass  # En silence — le miel survit en mémoire
-    
+        except PermissionError as e:
+            print(f"[MIEL][ERREUR] Permission refusee pour {self.chemin}: {e}", file=sys.stderr)
+        except OSError as e:
+            print(f"[MIEL][ERREUR] Echec ecriture disque ({self.chemin}): {e}", file=sys.stderr)
+        except (TypeError, ValueError) as e:
+            print(f"[MIEL][ERREUR] Serialisation JSON impossible: {e}", file=sys.stderr)
+
     def _charger(self):
         """Charge les réserves depuis le disque."""
         try:
             if self.chemin.exists():
                 with open(self.chemin, 'r', encoding='utf-8') as f:
                     self.reserves = json.load(f)
-        except Exception:
+        except PermissionError as e:
+            print(f"[MIEL][ERREUR] Permission refusee pour lire {self.chemin}: {e}", file=sys.stderr)
+            self.reserves = {}
+        except json.JSONDecodeError as e:
+            print(f"[MIEL][ERREUR] Fichier miel corrompu ({self.chemin}): {e}", file=sys.stderr)
+            self.reserves = {}
+        except OSError as e:
+            print(f"[MIEL][ERREUR] Echec lecture disque ({self.chemin}): {e}", file=sys.stderr)
             self.reserves = {}
     
     def taille(self):
