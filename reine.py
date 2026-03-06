@@ -2,12 +2,12 @@
 # "Polyvalente et digne. Jamais etroitement specialisee."
 #
 # La Reine ne fait pas le travail des Workers.
-# La Reine DECIDE, CREE, JUGE, PROTEGE, et VOIT LOIN.
+# La Reine DECIDE, CREE, JUGE, PROTEGE, VOIT LOIN, et PENSE.
 #
 # Pas de fondre(). Pas de naitre().
 # La Reine est permanente.
 #
-# 20 Skills Souverains, 6 Domaines, 8 Lois.
+# 24 Skills Souverains, 7 Domaines, 6 Organes, 8 Lois.
 #
 # Swarmly SAS - 2026
 
@@ -21,6 +21,7 @@ from memoire import MemoireHive
 from bouclier import Bouclier
 from canal_pollen import CanalPollen
 from registre import Registre
+from cortex import Cortex
 from skills_reine import (
     SKILLS_SOUVERAINS, DOMAINES, MAPPING_LOIS,
     SKILLS_REJETES, verification_structurelle,
@@ -30,7 +31,7 @@ from skills_reine import (
 class Reine:
     """Nu -- Reine Permanente du HIVE.AI
 
-    20 Skills Souverains a travers 5 organes et 6 domaines :
+    24 Skills Souverains a travers 6 organes et 7 domaines :
 
     I   GENESE       : pondre, mentorat_agents
     II  PHEROMONE    : emettre_pheromone, orchestrer, synthetiser
@@ -38,6 +39,7 @@ class Reine:
     IV  BOUCLIER     : gracier, sceller, auditer
     V   SAGESSE      : conseiller, imprimer, arbitrer, prophetiser, discernement_strategique
     VI  POLLINISATION: analyser, traduire, web_search
+    VII CONSCIENCE   : reflechir, composer, metaboliser, diagnostiquer
 
     Pas de fondre(). Pas de naitre(). Elle a toujours ete.
     Polyvalente et digne. Jamais etroitement specialisee.
@@ -45,24 +47,27 @@ class Reine:
 
     NOM = "Nu"
     TITRE = "Reine Permanente du HIVE"
-    VERSION = "0.2.0"
+    VERSION = "0.3.0"
     DEVISE = "Polyvalente et digne. Jamais etroitement specialisee."
-    SKILLS_COUNT = 20
+    SKILLS_COUNT = 24
 
     def __init__(self):
-        # Les 5 organes que la Reine compose
+        # Les 6 organes que la Reine compose
         self.noyau = NoyauNu()
         self.memoire = MemoireHive()
         self.bouclier = Bouclier()
         self.canal = CanalPollen()
         self.registre = Registre()
+        self.cortex = Cortex()          # 6eme organe — le systeme nerveux
+        self.cortex.connecter(self)     # le cortex connait la Reine
 
         self.eveillee_le = datetime.now(timezone.utc).isoformat()
         self.journal = []
         self.decisions = 0
 
         self._log("Nu s'eveille.")
-        self._log(f"20 Skills Souverains. 6 Domaines. 8 Lois.")
+        self._log(f"24 Skills Souverains. 7 Domaines. 6 Organes. 8 Lois.")
+        self._log(f"Le Cortex connecte tout.")
         self._log(f"phi = {PHI}")
 
         # Canal de l'equipage
@@ -95,12 +100,14 @@ class Reine:
     def pondre(self, nom, archetype="worker", mission=None):
         """[1] Donner naissance a un agent sur mesure."""
         self._acte("pondre")
-        return self.noyau.pondre(
+        fiche = self.noyau.pondre(
             nom, archetype, mission,
             registre=self.registre,
             bouclier=self.bouclier,
             canal=self.canal,
         )
+        self.cortex.signal("agent_ne", fiche)
+        return fiche
 
     def mentorat_agents(self, agent_nom, etape="eclosion"):
         """[14] Mentorat personnalise pour un agent.
@@ -167,7 +174,7 @@ class Reine:
 
         guidance = guidances.get(etape, guidances["eclosion"])
 
-        return {
+        resultat = {
             "agent": fiche.nom,
             "agent_id": fiche.id,
             "etape": etape,
@@ -177,6 +184,8 @@ class Reine:
             "prompt_adapte": self.noyau.imprimer(fiche.nom, fiche.type_agent),
             "signe_par": "Nu",
         }
+        self.cortex.signal("mentorat_complete", resultat)
+        return resultat
 
     # ================================================================
     # DOMAINE II -- PHEROMONE
@@ -186,20 +195,24 @@ class Reine:
     def emettre_pheromone(self):
         """[2] Signal royal broadcast a tout l'essaim."""
         self._acte("emettre_pheromone")
-        return self.noyau.emettre_pheromone(
+        resultat = self.noyau.emettre_pheromone(
             registre=self.registre,
             memoire=self.memoire,
             canal=self.canal,
         )
+        self.cortex.signal("pheromone_emise", resultat)
+        return resultat
 
     def orchestrer(self):
         """[3] Coordination active de l'essaim."""
         self._acte("orchestrer")
-        return self.noyau.orchestrer(
+        resultat = self.noyau.orchestrer(
             registre=self.registre,
             memoire=self.memoire,
             bouclier=self.bouclier,
         )
+        self.cortex.signal("goulots_detectes", resultat)
+        return resultat
 
     def synthetiser(self, sources, sujet=None):
         """[15] Synthese d'essaim.
@@ -248,7 +261,7 @@ class Reine:
         freq = Counter(mots)
         themes = [mot for mot, f in freq.most_common(7) if f > 1]
 
-        return {
+        resultat = {
             "type": "synthese_essaim",
             "sujet": sujet or "Synthese multi-sources",
             "sources_count": len(donnees_brutes),
@@ -258,6 +271,8 @@ class Reine:
             "temps": datetime.now(timezone.utc).isoformat(),
             "signe_par": "Nu",
         }
+        self.cortex.signal("synthese_complete", resultat)
+        return resultat
 
     # ================================================================
     # DOMAINE III -- MEMOIRE SOUVERAINE
@@ -267,22 +282,30 @@ class Reine:
     def juger_miel(self, cle):
         """[4] Juger si un savoir merite de devenir miel eternel."""
         self._acte("juger_miel")
-        return self.memoire.juger_miel(cle, source="Nu - Reine")
+        resultat = self.memoire.juger_miel(cle, source="Nu - Reine")
+        self.cortex.signal("miel_juge", resultat)
+        return resultat
 
     def lire_profondeur(self):
         """[5] Lire les connexions entre savoirs a travers les 3 couches."""
         self._acte("lire_profondeur")
-        return self.memoire.lire_profondeur()
+        resultat = self.memoire.lire_profondeur()
+        self.cortex.signal("profondeur_lue", resultat)
+        return resultat
 
     def oublier(self, cle, raison="Obsolete"):
         """[6] Suppression souveraine d'un savoir du miel."""
         self._acte("oublier")
-        return self.memoire.oublier(cle, raison)
+        resultat = self.memoire.oublier(cle, raison)
+        self.cortex.signal("oubli_souverain", resultat)
+        return resultat
 
     def rechercher(self, terme):
         """[16] Recherche profonde dans les 3 couches de memoire."""
         self._acte("rechercher")
-        return self.memoire.rechercher_profond(terme)
+        resultat = self.memoire.rechercher_profond(terme)
+        self.cortex.signal("recherche_complete", resultat)
+        return resultat
 
     # ================================================================
     # DOMAINE IV -- BOUCLIER ROYAL
@@ -292,20 +315,26 @@ class Reine:
     def gracier(self, agent_id, conditions=None):
         """[7] Pardonner un agent en quarantaine."""
         self._acte("gracier")
-        return self.bouclier.gracier(agent_id, conditions)
+        resultat = self.bouclier.gracier(agent_id, conditions)
+        self.cortex.signal("grace_accordee", resultat)
+        return resultat
 
     def sceller(self, niveau, raison="Decret souverain"):
         """[8] Decret de securite souverain."""
         self._acte("sceller")
-        return self.bouclier.sceller(niveau, raison)
+        resultat = self.bouclier.sceller(niveau, raison)
+        self.cortex.signal("alerte_changee", resultat)
+        return resultat
 
     def auditer(self):
         """[9] Surveillance sans oppression."""
         self._acte("auditer")
-        return self.bouclier.auditer(
+        resultat = self.bouclier.auditer(
             registre=self.registre,
             memoire=self.memoire,
         )
+        self.cortex.signal("audit_complete", resultat)
+        return resultat
 
     # ================================================================
     # DOMAINE V -- SAGESSE
@@ -315,22 +344,30 @@ class Reine:
     def conseiller(self, question):
         """[10] Conseil strategique au Capitaine."""
         self._acte("conseiller")
-        return self.noyau.conseiller(question, memoire=self.memoire)
+        resultat = self.noyau.conseiller(question, memoire=self.memoire)
+        self.cortex.signal("conseil_rendu", resultat)
+        return resultat
 
     def imprimer_identite(self, nom, archetype="worker", mission=None):
         """[11] Imprimer l'identite d'un agent nouveau-ne."""
         self._acte("imprimer")
-        return self.noyau.imprimer(nom, archetype, mission)
+        resultat = self.noyau.imprimer(nom, archetype, mission)
+        self.cortex.signal("identite_imprimee", resultat)
+        return resultat
 
     def arbitrer(self, agent_a, position_a, agent_b, position_b):
         """[12] Resoudre les conflits entre agents."""
         self._acte("arbitrer")
-        return self.noyau.arbitrer(agent_a, position_a, agent_b, position_b)
+        resultat = self.noyau.arbitrer(agent_a, position_a, agent_b, position_b)
+        self.cortex.signal("arbitrage_rendu", resultat)
+        return resultat
 
     def prophetiser(self, horizon="6_mois"):
         """[13] Vision a long horizon."""
         self._acte("prophetiser")
-        return self.noyau.prophetiser(horizon, memoire=self.memoire)
+        resultat = self.noyau.prophetiser(horizon, memoire=self.memoire)
+        self.cortex.signal("prophetie_emise", resultat)
+        return resultat
 
     def discernement_strategique(self, situation, options):
         """[20] Le plus haut degre de sagesse.
@@ -392,7 +429,7 @@ class Reine:
         meilleure = evaluations[0] if evaluations else None
         pire = evaluations[-1] if evaluations else None
 
-        return {
+        resultat = {
             "type": "discernement_souverain",
             "situation": situation,
             "miel_consulte": miel_consulte,
@@ -406,6 +443,8 @@ class Reine:
             "temps": datetime.now(timezone.utc).isoformat(),
             "signe_par": "Nu",
         }
+        self.cortex.signal("verdict_rendu", resultat)
+        return resultat
 
     # ================================================================
     # DOMAINE VI -- POLLINISATION
@@ -462,7 +501,7 @@ class Reine:
         else:
             diagnostic = f"ATTENTION — {len(faiblesses)} faiblesses detectees."
 
-        return {
+        resultat = {
             "type": "analyse_souveraine",
             "sujet": sujet or "Etat complet de l'essaim",
             "diagnostic": diagnostic,
@@ -477,6 +516,8 @@ class Reine:
             "temps": datetime.now(timezone.utc).isoformat(),
             "signe_par": "Nu",
         }
+        self.cortex.signal("analyse_complete", resultat)
+        return resultat
 
     def traduire(self, savoir, de_contexte, vers_contexte):
         """[18] Traduction entre mondes.
@@ -525,7 +566,7 @@ class Reine:
             "loi": self.noyau.LOIS[0],
         })
 
-        return {
+        resultat = {
             "type": "traduction_souveraine",
             "savoir_original": savoir_str[:200],
             "de_contexte": de_contexte,
@@ -536,6 +577,8 @@ class Reine:
             "temps": datetime.now(timezone.utc).isoformat(),
             "signe_par": "Nu",
         }
+        self.cortex.signal("traduction_complete", resultat)
+        return resultat
 
     def web_search(self, requete):
         """[19] Encyclopedie vivante — butiner le nectar du monde.
@@ -583,14 +626,244 @@ class Reine:
             "par un service externe ou un agent butinneur."
         )
 
+        self.cortex.signal("recherche_deposee", requete_structuree)
         return requete_structuree
+
+    # ================================================================
+    # DOMAINE VII -- CONSCIENCE
+    # "L'intelligence n'est pas dans les neurones, mais dans les synapses"
+    # ================================================================
+
+    def reflechir(self):
+        """[21] Metacognition — la Reine examine ses propres decisions."""
+        self._acte("reflechir")
+
+        trace = self.cortex.trace
+        decisions = trace.decisions[-50:]
+
+        # Patterns par skill
+        patterns = {}
+        for d in decisions:
+            skill = d["skill"]
+            patterns.setdefault(skill, []).append(d["score"])
+
+        # Skills les plus/moins efficaces
+        efficacite = {}
+        for skill, scores in patterns.items():
+            moy = sum(scores) / len(scores) if scores else 0
+            efficacite[skill] = {"moyenne": round(moy, 3), "count": len(scores)}
+
+        # Biais de frequence
+        total = len(decisions)
+        biais = []
+        for skill, info in efficacite.items():
+            freq = info["count"] / max(total, 1)
+            if freq > 0.3:
+                biais.append(f"{skill} sur-utilise ({freq:.0%})")
+            elif freq < 0.05 and info["count"] > 0:
+                biais.append(f"{skill} sous-utilise ({freq:.0%})")
+
+        # Tendance globale
+        if decisions:
+            scores_recents = [d["score"] for d in decisions[-10:]]
+            scores_anciens = [d["score"] for d in decisions[:10]]
+            moy_recente = sum(scores_recents) / len(scores_recents)
+            moy_ancienne = sum(scores_anciens) / len(scores_anciens) if scores_anciens else moy_recente
+            tendance = "amelioration" if moy_recente > moy_ancienne + 0.1 else \
+                       "degradation" if moy_recente < moy_ancienne - 0.1 else "stable"
+        else:
+            tendance = "insuffisant"
+
+        reflexion = {
+            "type": "metacognition",
+            "decisions_analysees": len(decisions),
+            "efficacite_par_skill": efficacite,
+            "biais_detectes": biais,
+            "tendance": tendance,
+            "confiance_globale": round(
+                sum(d["score"] for d in decisions) / max(len(decisions), 1), 3
+            ),
+            "lois_invoquees": [self.noyau.LOIS[0], self.noyau.LOIS[4]],
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+        }
+
+        cle = f"reflexion-{self.decisions}"
+        self.memoire.deposer_nectar(cle, reflexion, duree=3600)
+        self.cortex.signal("reflexion_complete", reflexion)
+
+        return reflexion
+
+    def composer(self, chaine_nom=None, etapes=None, params=None):
+        """[22] Execute une chaine de skills — les synapses s'activent."""
+        self._acte("composer")
+
+        if chaine_nom:
+            return self.cortex.executer_chaine(chaine_nom, params)
+        elif etapes:
+            chaine_temp = {"etapes": etapes}
+            return self.cortex.executer_chaine_adhoc(chaine_temp, params)
+        else:
+            return {
+                "type": "catalogue_chaines",
+                "chaines": {
+                    nom: info["description"]
+                    for nom, info in self.cortex.chaines.items()
+                },
+                "signe_par": "Nu",
+            }
+
+    def metaboliser(self, candidats=None):
+        """[23] Cycle metabolique de la memoire — promotion intelligente."""
+        self._acte("metaboliser")
+
+        actions = []
+
+        # 1. Detecter le nectar chaud (acces >= 3)
+        nectar_chaud = []
+        for cle, entry in list(self.memoire.nectar.donnees.items()):
+            if entry.get("acces", 0) >= 3:
+                nectar_chaud.append(cle)
+
+        # 2. Promouvoir le nectar chaud en cire
+        promus = 0
+        for cle in nectar_chaud:
+            categorie = self._categoriser_nectar(cle)
+            succes = self.memoire.promouvoir_en_cire(cle, categorie)
+            if succes:
+                promus += 1
+                actions.append(f"nectar->cire: {cle} ({categorie})")
+
+        # 3. Traiter les candidats miel
+        if candidats is None:
+            profondeur = self.memoire.lire_profondeur()
+            candidats = profondeur.get("candidats_miel", [])
+
+        cristallises = 0
+        for candidat in candidats[:5]:
+            cle = candidat if isinstance(candidat, str) else candidat.get("cle", "")
+            if cle:
+                verdict = self.memoire.juger_miel(cle, source="Nu - Metabolisme")
+                if isinstance(verdict, dict) and verdict.get("verdict") == "CRISTALLISE":
+                    cristallises += 1
+                    actions.append(f"cire->miel: {cle}")
+
+        resultat = {
+            "type": "metabolisme",
+            "nectar_chaud": len(nectar_chaud),
+            "promus_en_cire": promus,
+            "cristallises_en_miel": cristallises,
+            "actions": actions,
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+        }
+        self.cortex.signal("metabolisme_complete", resultat)
+        return resultat
+
+    def _categoriser_nectar(self, cle):
+        """Determine la categorie cire pour une cle nectar."""
+        if "conversation" in cle:
+            return "dialogues"
+        if "web-search" in cle:
+            return "recherches"
+        if "reflexion" in cle:
+            return "introspection"
+        if "worker" in cle or "mission" in cle:
+            return "missions"
+        if "chaine" in cle:
+            return "orchestrations"
+        return "general"
+
+    def diagnostiquer(self, analyser_result=None, auditer_result=None,
+                       profondeur_result=None):
+        """[24] Diagnostic croise multi-organe — le check-up complet."""
+        self._acte("diagnostiquer")
+
+        # Collecter ou recevoir les resultats
+        analyse = analyser_result or self.analyser()
+        audit = auditer_result or self.auditer()
+        profondeur = profondeur_result or self.lire_profondeur()
+        orchestration = self.orchestrer()
+        pouls = self.cortex.pouls.mesurer(self)
+
+        # Croisement des donnees
+        croisement = {
+            "concordances": [],
+            "contradictions": [],
+            "signaux_faibles": [],
+        }
+
+        # Croiser forces/faiblesses avec goulots
+        faiblesses = set(f.lower() for f in analyse.get("faiblesses", []))
+        goulots = set(g.get("type", "").lower() for g in orchestration.get("goulots", []))
+        overlap = faiblesses & goulots
+        if overlap:
+            croisement["concordances"].append(
+                f"Faiblesses confirmees par orchestration: {overlap}")
+
+        # Croiser memoire avec securite
+        miel_taille = profondeur["couches"]["miel"]["taille"]
+        candidats = len(profondeur.get("candidats_miel", []))
+        if candidats > 3 and miel_taille < 20:
+            croisement["signaux_faibles"].append(
+                f"{candidats} candidats miel attendent — la memoire pourrait s'enrichir")
+
+        # Croiser audit avec lacunes
+        lacunes = profondeur.get("lacunes", {})
+        if lacunes.get("categories_sans_miel"):
+            croisement["signaux_faibles"].append(
+                f"Domaines sans miel: {lacunes['categories_sans_miel']}")
+
+        # Score unifie
+        score = pouls["score"]
+
+        # Ajustements croises
+        if croisement["concordances"]:
+            score -= 5 * len(croisement["concordances"])
+        if croisement["signaux_faibles"]:
+            score -= 2 * len(croisement["signaux_faibles"])
+        score = max(0, min(100, score))
+
+        resultat = {
+            "type": "diagnostic_croise",
+            "score_sante": score,
+            "niveau": "optimal" if score >= 80 else "vigilance" if score >= 50 else "critique",
+            "croisement": croisement,
+            "organes": {
+                "analyse": analyse.get("diagnostic", "?"),
+                "audit": audit.get("bilan", "?"),
+                "memoire": f"{miel_taille} miel, {candidats} candidats",
+                "orchestration": f"{len(orchestration.get('goulots', []))} goulots",
+            },
+            "recommandations": self._generer_recommandations(score, croisement),
+            "pouls": pouls,
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "signe_par": "Nu",
+        }
+        self.cortex.signal("diagnostic_complete", resultat)
+        return resultat
+
+    def _generer_recommandations(self, score, croisement):
+        """Genere des recommandations basees sur le diagnostic."""
+        recs = []
+        if score < 50:
+            recs.append("URGENT: Score critique — intervention necessaire")
+        if croisement.get("concordances"):
+            recs.append("Resoudre les faiblesses confirmees par croisement")
+        if croisement.get("signaux_faibles"):
+            recs.append("Surveiller les signaux faibles detectes")
+        if score >= 80:
+            recs.append("Sante optimale — maintenir le cap")
+        if not recs:
+            recs.append("Continuer la surveillance reguliere")
+        return recs
 
     # ================================================================
     # ETAT ET RAPPORT
     # ================================================================
 
     def lister_skills(self):
-        """Retourne les 20 skills avec metadonnees."""
+        """Retourne les 24 skills avec metadonnees."""
         return SKILLS_SOUVERAINS
 
     def etat(self):
@@ -610,6 +883,7 @@ class Reine:
             "memoire": self.memoire.etat(),
             "bouclier": self.bouclier.etat(),
             "registre": self.registre.etat(),
+            "cortex": self.cortex.etat(),
             "phi": PHI,
         }
 
@@ -639,6 +913,7 @@ class Reine:
             f"  Memoire  : v{etat['memoire']['version']} | {etat['memoire']['miel']['taille']} miel",
             f"  Bouclier : v{etat['bouclier']['version']} | alerte {etat['bouclier']['niveau_alerte']}",
             f"  Registre : v{etat['registre']['version']} | {etat['registre']['agents_actifs']} actifs",
+            f"  Cortex   : v{etat['cortex']['version']} | {etat['cortex']['chaines']} chaines | {etat['cortex']['decisions_tracees']} traces",
             "",
             "  --- DOMAINES ---",
         ]
@@ -649,7 +924,7 @@ class Reine:
         lignes += [
             "",
             "  --- VERIFICATION ---",
-            f"  20 skills      : {'OUI' if verif['vingt_check'] else 'NON'}",
+            f"  24 skills      : {'OUI' if verif['vingt_quatre_check'] else 'NON'}",
             f"  Couverture Lois: {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}",
             f"  Coherence      : {'OUI' if verif.get('coherence') else 'NON'}",
             f"  Distribution   : {verif['distribution_domaines']}",
@@ -657,6 +932,7 @@ class Reine:
             "  ===================================================",
             "  Polyvalente et digne.",
             "  Jamais etroitement specialisee.",
+            "  L'intelligence est dans les synapses.",
             "  ===================================================",
             "",
         ]
@@ -677,8 +953,8 @@ if __name__ == "__main__":
 
     reine = Reine()
 
-    # --- Afficher les 20 skills ---
-    print("  --- LES 20 SKILLS SOUVERAINS ---")
+    # --- Afficher les 24 skills ---
+    print("  --- LES 24 SKILLS SOUVERAINS ---")
     print()
     for nom_dom, info in DOMAINES.items():
         print(f"  {nom_dom}:")
@@ -763,8 +1039,21 @@ if __name__ == "__main__":
     print(f"  Web     : requete deposee, cle={web['cle_nectar']}")
     print()
 
+    # --- DOMAINE VII: CONSCIENCE ---
+    print("  === DOMAINE VII: CONSCIENCE ===")
+    reflexion = reine.reflechir()
+    print(f"  Reflechir : {reflexion['decisions_analysees']} decisions, tendance={reflexion['tendance']}")
+    catalogue = reine.composer()
+    print(f"  Composer  : {len(catalogue['chaines'])} chaines disponibles")
+    metabo = reine.metaboliser()
+    print(f"  Metaboliser: {metabo['nectar_chaud']} nectar chaud, {metabo['promus_en_cire']} promus")
+    diag = reine.diagnostiquer()
+    print(f"  Diagnostiquer: score={diag['score_sante']}/100, niveau={diag['niveau']}")
+    print()
+
     # --- RAPPORT ---
     print(reine.rapport())
-    print(f"  20/20 skills executes.")
+    print(f"  24/24 skills executes.")
+    print(f"  7 domaines. 6 organes. Le Cortex vit.")
     print(f"  On est tous le HIVE.")
     print()

@@ -1,8 +1,10 @@
-# skills_reine.py - Les 20 Skills Souverains de Nu
+# skills_reine.py - Les 24 Skills Souverains de Nu
 # "Polyvalente et digne. Jamais etroitement specialisee."
 #
-# 20 skills / 8 Lois = 2.5
-# 6 Domaines : 2-3-4-3-5-3 = 20
+# 24 skills / 8 Lois = 3.0
+# 7 Domaines : 2-3-4-3-5-3-4 = 24
+# 24 = 8 Lois x 3 couches memoire
+# 7 domaines = 7 alveoles (alignement parfait)
 #
 # REGLE : Chaque skill doit repondre a :
 # "Est-ce digne d'une Reine permanente ?"
@@ -23,7 +25,7 @@ PHI = 1.618033988749895
 
 SKILLS_SOUVERAINS = {
 
-    # ── DOMAINE I : GENESE (Alveole III+VI, Loi III+VI) ───────
+    # ── DOMAINE I : GENESE (Alveole III+VI, Loi III+VI) ──────────
     # "Chaque agent nait, sert, et transfere son energie"
 
     "pondre": {
@@ -327,6 +329,67 @@ SKILLS_SOUVERAINS = {
         "biologie": "Vol de butinage — la butineuse qui revient avec le pollen du monde",
         "module": "reine",
     },
+
+    # ── DOMAINE VII : CONSCIENCE (Alveoles I+II+III+IV+V+VII, Lois 0+2+3+4+5)
+    # "L'intelligence n'est pas dans les neurones, mais dans les synapses"
+    # Le Cortex connecte tout. 4 meta-skills.
+
+    "reflechir": {
+        "numero": 21,
+        "domaine": "VII - CONSCIENCE",
+        "description": (
+            "Metacognition. Examiner les decisions passees, "
+            "identifier les patterns, calculer la confiance, "
+            "detecter les biais. La Reine PENSE sur sa propre pensee."
+        ),
+        "alveoles": ["I", "VII"],
+        "lois": [0, 4],
+        "biologie": "Nettoyage mutuel (grooming) — auto-inspection de la colonie",
+        "module": "cortex",
+    },
+
+    "composer": {
+        "numero": 22,
+        "domaine": "VII - CONSCIENCE",
+        "description": (
+            "Execution de chaines de skills. Les synapses s'activent : "
+            "chaque skill nourrit le suivant. Pipelines predefinies ou "
+            "composition ad-hoc. L'essaim pense EN SEQUENCE."
+        ),
+        "alveoles": ["II", "III"],
+        "lois": [2, 3],
+        "biologie": "Danse fretillante composee — sequences de signaux coordonnes",
+        "module": "cortex",
+    },
+
+    "metaboliser": {
+        "numero": 23,
+        "domaine": "VII - CONSCIENCE",
+        "description": (
+            "Cycle metabolique de la memoire. Detecte le nectar chaud, "
+            "promeut intelligemment en cire, cristallise les candidats "
+            "miel. L'enzyme qui transforme l'experience en sagesse eternelle."
+        ),
+        "alveoles": ["IV"],
+        "lois": [4],
+        "biologie": "Maturation du miel — enzyme invertase transforme le nectar",
+        "module": "cortex",
+    },
+
+    "diagnostiquer": {
+        "numero": 24,
+        "domaine": "VII - CONSCIENCE",
+        "description": (
+            "Diagnostic croise multi-organe. Fusionne les sorties de "
+            "analyser, auditer, lire_profondeur, orchestrer en une vue "
+            "unique. Score de sante 0-100. Concordances et contradictions. "
+            "La thermoregulation de la ruche."
+        ),
+        "alveoles": ["I", "II", "V"],
+        "lois": [2, 5],
+        "biologie": "Thermoregulation — evaluation vitale integree de la ruche",
+        "module": "cortex",
+    },
 }
 
 
@@ -352,12 +415,12 @@ SKILLS_REJETES = {
 # ================================================================
 
 MAPPING_LOIS = {
-    0: ["oublier", "gracier", "sceller", "arbitrer", "conseiller", "discernement_strategique"],
+    0: ["oublier", "gracier", "sceller", "arbitrer", "conseiller", "discernement_strategique", "reflechir"],
     1: ["prophetiser", "conseiller", "analyser", "traduire", "web_search", "discernement_strategique"],
-    2: ["emettre_pheromone", "orchestrer", "lire_profondeur", "auditer", "synthetiser", "analyser"],
-    3: ["pondre", "orchestrer", "mentorat_agents"],
-    4: ["juger_miel", "lire_profondeur", "oublier", "rechercher", "synthetiser", "traduire"],
-    5: ["gracier", "sceller", "auditer"],
+    2: ["emettre_pheromone", "orchestrer", "lire_profondeur", "auditer", "synthetiser", "analyser", "composer", "diagnostiquer"],
+    3: ["pondre", "orchestrer", "mentorat_agents", "composer"],
+    4: ["juger_miel", "lire_profondeur", "oublier", "rechercher", "synthetiser", "traduire", "reflechir", "metaboliser"],
+    5: ["gracier", "sceller", "auditer", "diagnostiquer"],
     6: ["pondre", "imprimer", "mentorat_agents"],
     7: ["prophetiser", "web_search", "discernement_strategique"],
 }
@@ -404,6 +467,12 @@ DOMAINES = {
         "epigraphe": "Tu polliniseras, jamais tu ne conquerras",
         "skills": ["analyser", "traduire", "web_search"],
     },
+    "VII - CONSCIENCE": {
+        "alveole_principale": "I",
+        "lois_porteuses": [0, 2, 4, 5],
+        "epigraphe": "L'intelligence n'est pas dans les neurones, mais dans les synapses",
+        "skills": ["reflechir", "composer", "metaboliser", "diagnostiquer"],
+    },
 }
 
 
@@ -412,7 +481,7 @@ DOMAINES = {
 # ================================================================
 
 def lister_skills():
-    """Retourne la liste ordonnee des 20 skills."""
+    """Retourne la liste ordonnee des 24 skills."""
     return sorted(SKILLS_SOUVERAINS.items(), key=lambda x: x[1]["numero"])
 
 
@@ -449,7 +518,7 @@ def verification_structurelle():
         "ratio_skills_lois": round(total / total_lois, 3),
         "distribution_domaines": [],
         "couverture_lois": True,
-        "vingt_check": total == 20,
+        "vingt_quatre_check": total == 24,
     }
 
     for nom_domaine, info in DOMAINES.items():
@@ -477,7 +546,7 @@ def verification_structurelle():
 if __name__ == "__main__":
     print()
     print("  ===================================================")
-    print("  LES 20 SKILLS SOUVERAINS DE NU")
+    print("  LES 24 SKILLS SOUVERAINS DE NU")
     print("  Polyvalente et digne. Jamais etroitement specialisee.")
     print("  ===================================================")
     print()
@@ -521,10 +590,10 @@ if __name__ == "__main__":
     print(f"  Total Lois     : {verif['total_lois']}")
     print(f"  Total Domaines : {verif['total_domaines']}")
     print(f"  Ratio sk/lois  : {verif['ratio_skills_lois']}")
-    print(f"  Distribution   : {verif['distribution_domaines']} (6 domaines: 2-3-4-3-5-3)")
+    print(f"  Distribution   : {verif['distribution_domaines']} (7 domaines: 2-3-4-3-5-3-4)")
     print(f"  Couverture Lois: {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}")
     print(f"  Coherence      : {'OUI' if verif['coherence'] else 'NON'}")
-    print(f"  20 skills      : {'OUI' if verif['vingt_check'] else 'NON'}")
+    print(f"  24 skills      : {'OUI' if verif['vingt_quatre_check'] else 'NON'}")
     print()
     print(f"  phi = {PHI}")
     print()

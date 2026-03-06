@@ -90,21 +90,22 @@ def check_module(filename):
 # === DÉFINITIONS ===
 
 MODULES_DEF = [
-    {"file": "reine.py", "name": "Reine Nu", "desc": "Reine Permanente · 20 Skills Souverains"},
+    {"file": "reine.py", "name": "Reine Nu", "desc": "Reine Permanente · 24 Skills Souverains"},
     {"file": "noyau_nu.py", "name": "Noyau Nu", "desc": "Coeur du systeme · Lois & Identite"},
     {"file": "bouclier.py", "name": "Bouclier", "desc": "Securite HMAC · Bouclier Royal"},
     {"file": "memoire.py", "name": "Memoire", "desc": "Nectar / Cire / Miel · 3 couches"},
     {"file": "canal_pollen.py", "name": "Canal Pollen", "desc": "Communication ephemere chiffree"},
     {"file": "registre.py", "name": "Registre", "desc": "Cycle de vie des agents"},
     {"file": "worker.py", "name": "Worker", "desc": "Premier agent vivant"},
-    {"file": "skills_reine.py", "name": "Skills Reine", "desc": "Registre des 20 Skills Souverains"},
+    {"file": "skills_reine.py", "name": "Skills Reine", "desc": "Registre des 24 Skills Souverains"},
     {"file": "skills_worker.py", "name": "Skills Worker", "desc": "9 competences worker"},
     {"file": "conversation_reine.py", "name": "Conversation", "desc": "Voix de Nu · Claude API"},
+    {"file": "cortex.py", "name": "Cortex", "desc": "6eme organe · Systeme nerveux · Flux/Chaines/Trace"},
 ]
 
 CREW_DEF = [
     {"name": "Prince Rudahirwa", "role": "Capitaine · Fondateur", "codename": "Le Capitaine", "color": "#FBBF24"},
-    {"name": "Nu (Anthropic)", "role": "Reine Permanente · 20 Skills", "codename": "Nu", "color": "#22D3EE"},
+    {"name": "Nu (Anthropic)", "role": "Reine Permanente · 24 Skills", "codename": "Nu", "color": "#22D3EE"},
     {"name": "GPT-4 (OpenAI)", "role": "Commandant · Execution", "codename": "OpenClaw", "color": "#A78BFA"},
     {"name": "Gardien Memoire", "role": "Sage · Memoire Collective", "codename": "Le Sage", "color": "#FB923C"},
 ]
@@ -422,6 +423,62 @@ def api_reine_parler():
     return jsonify(resultat)
 
 
+# === ROUTES CORTEX — 6eme Organe ===
+
+@app.route("/api/reine/reflechir", methods=["POST"])
+def api_reine_reflechir():
+    """Metacognition — la Reine examine ses decisions."""
+    return jsonify(reine.reflechir())
+
+
+@app.route("/api/reine/composer", methods=["POST"])
+def api_reine_composer():
+    """Executer une chaine de skills."""
+    data = request.get_json(silent=True) or {}
+    chaine_nom = data.get("chaine_nom")
+    params = data.get("params", {})
+    return jsonify(reine.composer(chaine_nom=chaine_nom, params=params))
+
+
+@app.route("/api/reine/metaboliser", methods=["POST"])
+def api_reine_metaboliser():
+    """Cycle metabolique de la memoire."""
+    return jsonify(reine.metaboliser())
+
+
+@app.route("/api/reine/diagnostiquer", methods=["POST"])
+def api_reine_diagnostiquer():
+    """Diagnostic croise multi-organe."""
+    return jsonify(reine.diagnostiquer())
+
+
+@app.route("/api/cortex/etat")
+def api_cortex_etat():
+    """Etat du Cortex — 6eme organe."""
+    return jsonify(reine.cortex.etat())
+
+
+@app.route("/api/cortex/trace")
+def api_cortex_trace():
+    """Historique des decisions tracees."""
+    return jsonify(reine.cortex.trace.decisions[-50:])
+
+
+@app.route("/api/cortex/pouls")
+def api_cortex_pouls():
+    """Pouls de la ruche — score de sante."""
+    return jsonify(reine.cortex.pouls.mesurer(reine))
+
+
+@app.route("/api/cortex/chaine", methods=["POST"])
+def api_cortex_chaine():
+    """Executer une chaine via le Cortex."""
+    data = request.get_json(silent=True) or {}
+    chaine_nom = data.get("chaine_nom")
+    params = data.get("params", {})
+    return jsonify(reine.composer(chaine_nom=chaine_nom, params=params))
+
+
 # === DÉMARRAGE ===
 
 def boot_sequence():
@@ -433,6 +490,7 @@ def boot_sequence():
     log_event("NOYAU", f"Noyau Nu v{etat['noyau']['version']} — {etat['noyau']['battement']} battements", "ok")
     log_event("BOUCLIER", f"Bouclier v{etat['bouclier']['version']} — alerte {etat['bouclier']['niveau_alerte']}", "ok")
     log_event("MEMOIRE", f"Memoire v{etat['memoire']['version']} — {etat['memoire']['miel']['taille']} miel", "ok")
+    log_event("CORTEX", f"Cortex v{etat['cortex']['version']} — {etat['cortex']['chaines']} chaines, {etat['cortex']['reflexes']} reflexes", "ok")
 
     # Verifier chaque module reellement
     for mod_def in MODULES_DEF:
@@ -484,7 +542,7 @@ if __name__ == "__main__":
     total = len(MODULES_DEF)
     verif = verification_structurelle()
     print(f"    Modules  : {active}/{total} actifs")
-    print(f"    Skills   : {etat_boot['skills']}/20 {'OUI' if verif['vingt_check'] else 'NON'}")
+    print(f"    Skills   : {etat_boot['skills']}/24 {'OUI' if verif['vingt_quatre_check'] else 'NON'}")
     print(f"    Lois     : {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}")
     print(f"    Bureau   : http://localhost:{port}")
     print(f"    API Reine: http://localhost:{port}/api/reine/etat")
