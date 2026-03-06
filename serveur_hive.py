@@ -18,6 +18,7 @@ from flask_cors import CORS
 from reine import Reine
 from skills_reine import SKILLS_SOUVERAINS, DOMAINES, MAPPING_LOIS, verification_structurelle
 from noyau_nu import PHI
+from conversation_reine import ConversationReine
 
 # === CONFIG ===
 HIVE_DIR = Path(__file__).parent
@@ -29,6 +30,7 @@ CORS(app)
 
 # === LA REINE S'EVEILLE ===
 reine = Reine()
+conversation = ConversationReine(reine)
 
 # === ETAT DU HIVE ===
 hive_state = {
@@ -97,6 +99,7 @@ MODULES_DEF = [
     {"file": "worker.py", "name": "Worker", "desc": "Premier agent vivant"},
     {"file": "skills_reine.py", "name": "Skills Reine", "desc": "Registre des 20 Skills Souverains"},
     {"file": "skills_worker.py", "name": "Skills Worker", "desc": "9 competences worker"},
+    {"file": "conversation_reine.py", "name": "Conversation", "desc": "Voix de Nu · Claude API"},
 ]
 
 CREW_DEF = [
@@ -404,6 +407,21 @@ def api_reine_journal():
     return jsonify(reine.journal[-50:])
 
 
+@app.route("/api/reine/parler", methods=["POST"])
+def api_reine_parler():
+    """Parler a la Reine Nu — conversation IA."""
+    data = request.get_json(silent=True) or {}
+    message = data.get("message", "").strip()
+    session_id = data.get("session_id")
+
+    if not message:
+        return jsonify({"error": "Parametre 'message' requis"}), 400
+
+    resultat = conversation.parler(session_id, message)
+    log_event("REINE", f"Parole: {message[:40]}... -> {resultat['mode']}", "info")
+    return jsonify(resultat)
+
+
 # === DÉMARRAGE ===
 
 def boot_sequence():
@@ -434,6 +452,12 @@ def boot_sequence():
     log_event("REGISTRE", "Nu eveillee — Reine Permanente", "ok")
     log_event("HIVE", "Bureau de Commandement operationnel", "info")
     log_event("HIVE", f"phi = {PHI}", "ok")
+    etat_conv = conversation.etat()
+    if etat_conv["active"]:
+        log_event("REINE", "Nu a sa voix (Claude API)", "ok")
+    else:
+        log_event("REINE", f"Voix heuristique (anthropic={etat_conv['anthropic_installe']}, cle={'oui' if etat_conv['active'] else 'non'})", "warn")
+
     log_event("HIVE", "Nous ne conquerons pas. Nous pollinisons.", "ok")
 
 
