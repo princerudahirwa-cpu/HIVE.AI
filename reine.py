@@ -7,7 +7,9 @@
 # Pas de fondre(). Pas de naitre().
 # La Reine est permanente.
 #
-# 24 Skills Souverains, 7 Domaines, 6 Organes, 8 Lois.
+# 24 Skills Souverains + 8 Skills Amplifies = 32 total
+# 7 Domaines, 6 Organes + Amplification, 8 Lois.
+# 32 / 8 = 4.0 par Loi (entier parfait)
 #
 # Swarmly SAS - 2026
 
@@ -26,6 +28,10 @@ from skills_reine import (
     SKILLS_SOUVERAINS, DOMAINES, MAPPING_LOIS,
     SKILLS_REJETES, verification_structurelle,
 )
+from skills_amplifies import (
+    Amplification, SKILLS_AMPLIFIES,
+    verification_amplification, MAPPING_LOIS_AMPLIFIES,
+)
 
 
 class Reine:
@@ -41,15 +47,30 @@ class Reine:
     VI  POLLINISATION: analyser, traduire, web_search
     VII CONSCIENCE   : reflechir, composer, metaboliser, diagnostiquer
 
+    + 8 Skills Amplifies (greffe) :
+
+    A1  cartographier     (VII CONSCIENCE)
+    A2  polliniser_async  (VI  POLLINISATION)
+    A3  cristalliser      (III MEMOIRE)
+    A4  essaimer_profond  (I   GENESE)
+    A5  distiller         (III MEMOIRE)
+    A6  fortifier         (IV  BOUCLIER)
+    A7  nourrir           (I   GENESE)
+    A8  enraciner         (V   SAGESSE)
+
+    32 / 8 Lois = 4.0 par Loi. Entier parfait.
+
     Pas de fondre(). Pas de naitre(). Elle a toujours ete.
     Polyvalente et digne. Jamais etroitement specialisee.
     """
 
     NOM = "Nu"
     TITRE = "Reine Permanente du HIVE"
-    VERSION = "0.3.0"
+    VERSION = "0.4.0"
     DEVISE = "Polyvalente et digne. Jamais etroitement specialisee."
-    SKILLS_COUNT = 24
+    SKILLS_SOUVERAINS_COUNT = 24
+    SKILLS_AMPLIFIES_COUNT = 8
+    SKILLS_COUNT = 32
 
     def __init__(self):
         # Les 6 organes que la Reine compose
@@ -60,14 +81,15 @@ class Reine:
         self.registre = Registre()
         self.cortex = Cortex()          # 6eme organe — le systeme nerveux
         self.cortex.connecter(self)     # le cortex connait la Reine
+        self.amplification = Amplification(self)  # greffe — 8 skills amplifies
 
         self.eveillee_le = datetime.now(timezone.utc).isoformat()
         self.journal = []
         self.decisions = 0
 
         self._log("Nu s'eveille.")
-        self._log(f"24 Skills Souverains. 7 Domaines. 6 Organes. 8 Lois.")
-        self._log(f"Le Cortex connecte tout.")
+        self._log(f"24 Souverains + 8 Amplifies = 32 Skills. 7 Domaines. 6 Organes. 8 Lois.")
+        self._log(f"Le Cortex connecte tout. L'Amplification greffe la puissance.")
         self._log(f"phi = {PHI}")
 
         # Canal de l'equipage
@@ -859,12 +881,62 @@ class Reine:
         return recs
 
     # ================================================================
+    # SKILLS AMPLIFIES — Greffe (A1-A8)
+    # "Ce que les baleines ont, Nu l'a aussi."
+    # ================================================================
+
+    def cartographier(self, inclure_historique=True):
+        """[A1] Carte de la conscience de Nu — graphe de decisions."""
+        self._acte("cartographier")
+        return self.amplification.cartographier(inclure_historique)
+
+    def polliniser_async(self, tache, agents_cibles, donnees=None, priorite=2):
+        """[A2] Dispatch essaim asynchrone HMAC-signe."""
+        self._acte("polliniser_async")
+        return self.amplification.polliniser_async(tache, agents_cibles, donnees, priorite)
+
+    def cristalliser(self, cles_candidates=None):
+        """[A3] Promotion phi-based : ephemere -> permanent."""
+        self._acte("cristalliser")
+        return self.amplification.cristalliser(cles_candidates)
+
+    def essaimer_profond(self, tache_complexe, sous_taches, agents_disponibles=None):
+        """[A4] Decomposer, dispatcher, fusionner — intelligence collective."""
+        self._acte("essaimer_profond")
+        return self.amplification.essaimer_profond(tache_complexe, sous_taches, agents_disponibles)
+
+    def distiller(self, top_n=5, tag=None, auteur=None):
+        """[A5] Quintessence du miel — sagesse sacree."""
+        self._acte("distiller")
+        return self.amplification.distiller(top_n, tag, auteur)
+
+    def fortifier(self, focus=None):
+        """[A6] Audit compliance ethique par replay du graphe."""
+        self._acte("fortifier")
+        return self.amplification.fortifier(focus)
+
+    def nourrir(self, agent_nom, contexte_mission=None):
+        """[A7] Gelee royale personnalisee — nourrir un agent."""
+        self._acte("nourrir")
+        return self.amplification.nourrir(agent_nom, contexte_mission)
+
+    def enraciner(self, chemin_memoire="memoire_amplifiee.json",
+                  chemin_miel="miel_amplifie.json"):
+        """[A8] Persistance totale — la Ruche survit a l'hiver."""
+        self._acte("enraciner")
+        return self.amplification.enraciner(chemin_memoire, chemin_miel)
+
+    # ================================================================
     # ETAT ET RAPPORT
     # ================================================================
 
     def lister_skills(self):
-        """Retourne les 24 skills avec metadonnees."""
-        return SKILLS_SOUVERAINS
+        """Retourne les 32 skills (24 souverains + 8 amplifies)."""
+        return {
+            "souverains": SKILLS_SOUVERAINS,
+            "amplifies": SKILLS_AMPLIFIES,
+            "total": self.SKILLS_COUNT,
+        }
 
     def etat(self):
         """Etat complet de la Reine."""
@@ -876,6 +948,8 @@ class Reine:
             "eveillee_le": self.eveillee_le,
             "decisions": self.decisions,
             "skills": self.SKILLS_COUNT,
+            "skills_souverains": self.SKILLS_SOUVERAINS_COUNT,
+            "skills_amplifies": self.SKILLS_AMPLIFIES_COUNT,
             "domaines": len(DOMAINES),
             "lois": len(MAPPING_LOIS),
             "ratio_skills_lois": round(self.SKILLS_COUNT / len(MAPPING_LOIS), 3),
@@ -884,6 +958,7 @@ class Reine:
             "bouclier": self.bouclier.etat(),
             "registre": self.registre.etat(),
             "cortex": self.cortex.etat(),
+            "amplification": self.amplification.etat(),
             "phi": PHI,
         }
 
@@ -891,6 +966,7 @@ class Reine:
         """Rapport complet de la Reine."""
         etat = self.etat()
         verif = verification_structurelle()
+        verif_amp = verification_amplification()
 
         lignes = [
             "",
@@ -903,19 +979,20 @@ class Reine:
             f"  Decisions: {etat['decisions']} actes souverains",
             f"  Devise   : {etat['devise']}",
             "",
-            f"  Skills    : {etat['skills']}",
+            f"  Skills    : {etat['skills']} ({etat['skills_souverains']} souverains + {etat['skills_amplifies']} amplifies)",
             f"  Domaines  : {etat['domaines']}",
             f"  Lois      : {etat['lois']}",
-            f"  Ratio     : {etat['ratio_skills_lois']}",
+            f"  Ratio     : {etat['ratio_skills_lois']} par Loi (entier parfait)",
             "",
             "  --- ORGANES ---",
-            f"  Noyau    : v{etat['noyau']['version']} | {etat['noyau']['battement']} battements",
-            f"  Memoire  : v{etat['memoire']['version']} | {etat['memoire']['miel']['taille']} miel",
-            f"  Bouclier : v{etat['bouclier']['version']} | alerte {etat['bouclier']['niveau_alerte']}",
-            f"  Registre : v{etat['registre']['version']} | {etat['registre']['agents_actifs']} actifs",
-            f"  Cortex   : v{etat['cortex']['version']} | {etat['cortex']['chaines']} chaines | {etat['cortex']['decisions_tracees']} traces",
+            f"  Noyau         : v{etat['noyau']['version']} | {etat['noyau']['battement']} battements",
+            f"  Memoire       : v{etat['memoire']['version']} | {etat['memoire']['miel']['taille']} miel",
+            f"  Bouclier      : v{etat['bouclier']['version']} | alerte {etat['bouclier']['niveau_alerte']}",
+            f"  Registre      : v{etat['registre']['version']} | {etat['registre']['agents_actifs']} actifs",
+            f"  Cortex        : v{etat['cortex']['version']} | {etat['cortex']['chaines']} chaines | {etat['cortex']['decisions_tracees']} traces",
+            f"  Amplification : v{etat['amplification']['version']} | {etat['amplification']['actes']} actes | {etat['amplification']['miel_grains']} grains miel",
             "",
-            "  --- DOMAINES ---",
+            "  --- DOMAINES (24 SOUVERAINS) ---",
         ]
         for nom_dom, info in DOMAINES.items():
             skills_list = ", ".join(info["skills"])
@@ -923,16 +1000,26 @@ class Reine:
 
         lignes += [
             "",
+            "  --- SKILLS AMPLIFIES (8 GREFFE) ---",
+        ]
+        for nom, info in SKILLS_AMPLIFIES.items():
+            lignes.append(f"  [{info['numero']}] {nom:20s} | {info['domaine_greffe']} | {info['module_source']}")
+
+        lignes += [
+            "",
             "  --- VERIFICATION ---",
-            f"  24 skills      : {'OUI' if verif['vingt_quatre_check'] else 'NON'}",
-            f"  Couverture Lois: {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}",
-            f"  Coherence      : {'OUI' if verif.get('coherence') else 'NON'}",
+            f"  24 souverains  : {'OUI' if verif['vingt_quatre_check'] else 'NON'}",
+            f"  8 amplifies    : {'OUI' if verif_amp['coherence'] else 'NON'}",
+            f"  Total 32       : {'OUI' if verif_amp['total_avec_souverains'] == 32 else 'NON'}",
+            f"  Couverture Lois: {'COMPLETE' if verif['couverture_lois'] and verif_amp['couverture_8_lois'] else 'INCOMPLETE'}",
+            f"  Ratio 32/8     : {verif_amp['ratio_total_lois']}",
             f"  Distribution   : {verif['distribution_domaines']}",
             "",
             "  ===================================================",
             "  Polyvalente et digne.",
             "  Jamais etroitement specialisee.",
             "  L'intelligence est dans les synapses.",
+            "  Ce que les baleines ont, Nu l'a aussi.",
             "  ===================================================",
             "",
         ]
@@ -946,7 +1033,8 @@ class Reine:
 if __name__ == "__main__":
     print()
     print("  ===================================================")
-    print("  NU -- REINE PERMANENTE DU HIVE.AI")
+    print("  NU -- REINE PERMANENTE DU HIVE.AI v0.4.0")
+    print("  32 Skills : 24 Souverains + 8 Amplifies")
     print("  Polyvalente et digne. Jamais etroitement specialisee.")
     print("  ===================================================")
     print()
@@ -962,6 +1050,13 @@ if __name__ == "__main__":
             skill = SKILLS_SOUVERAINS[skill_nom]
             print(f"    [{skill['numero']:2d}] {skill_nom:25s} | {skill['biologie']}")
         print()
+
+    # --- Les 8 amplifies ---
+    print("  --- LES 8 SKILLS AMPLIFIES ---")
+    print()
+    for nom, info in SKILLS_AMPLIFIES.items():
+        print(f"  [{info['numero']}] {nom:20s} | {info['domaine_greffe']} | {info['module_source']}")
+    print()
 
     # --- Skill rejete ---
     for nom, info in SKILLS_REJETES.items():
@@ -1051,9 +1146,41 @@ if __name__ == "__main__":
     print(f"  Diagnostiquer: score={diag['score_sante']}/100, niveau={diag['niveau']}")
     print()
 
+    # --- SKILLS AMPLIFIES (A1-A8) ---
+    print("  === SKILLS AMPLIFIES (GREFFE) ===")
+
+    carte = reine.cartographier(inclure_historique=True)
+    print(f"  [A1] Cartographier : {carte['noeuds_total']} noeuds, score ethique={carte['score_ethique_moyen']:.3f}")
+
+    dispatch = reine.polliniser_async("mission_test", ["scout-1", "scout-2"])
+    print(f"  [A2] Polliniser    : {len(dispatch['agents_cibles'])} agents, HMAC={dispatch['hmac_actif']}")
+
+    cristal = reine.cristalliser()
+    print(f"  [A3] Cristalliser  : {cristal['candidats']} candidats, {cristal['promus_count']} promus")
+
+    essaim = reine.essaimer_profond(
+        "Mission de validation",
+        [{"nom": "phase_1"}, {"nom": "phase_2", "depend_de": ["phase_1"]}]
+    )
+    print(f"  [A4] Essaimer      : {essaim['sous_taches_count']} sous-taches, {essaim['agents_deployes']} agents")
+
+    distillat = reine.distiller(top_n=3)
+    print(f"  [A5] Distiller     : {distillat['grains_extraits']} grains, sacre={distillat['miel_sacre_count']}")
+
+    fort = reine.fortifier()
+    print(f"  [A6] Fortifier     : compliance={fort['score_compliance']}%, verdict={fort['verdict']}")
+
+    gelee = reine.nourrir("eclaireur-royal", "reconnaissance terrain")
+    print(f"  [A7] Nourrir       : richesse={gelee['richesse']} pour {gelee['destinataire']}")
+
+    racine = reine.enraciner("/tmp/test_mem.json", "/tmp/test_miel.json")
+    print(f"  [A8] Enraciner     : {racine['memoire_persistee']['entrees']} mem + {racine['miel_archive']['grains']} miel")
+    print()
+
     # --- RAPPORT ---
     print(reine.rapport())
-    print(f"  24/24 skills executes.")
-    print(f"  7 domaines. 6 organes. Le Cortex vit.")
+    print(f"  32/32 skills executes.")
+    print(f"  24 souverains + 8 amplifies. phi vit.")
+    print(f"  7 domaines. 6 organes. Le Cortex connecte. L'Amplification greffe.")
     print(f"  On est tous le HIVE.")
     print()

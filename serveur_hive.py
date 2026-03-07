@@ -20,6 +20,7 @@ from flask_cors import CORS
 
 from reine import Reine
 from skills_reine import SKILLS_SOUVERAINS, DOMAINES, MAPPING_LOIS, verification_structurelle
+from skills_amplifies import SKILLS_AMPLIFIES, verification_amplification
 from noyau_nu import PHI
 from conversation_reine import ConversationReine
 
@@ -176,6 +177,8 @@ MODULES_DEF = [
     {"file": "skills_worker.py", "name": "Skills Worker", "desc": "9 competences worker"},
     {"file": "conversation_reine.py", "name": "Conversation", "desc": "Voix de Nu · Claude API"},
     {"file": "cortex.py", "name": "Cortex", "desc": "6eme organe · Systeme nerveux · Flux/Chaines/Trace"},
+    {"file": "reine_amplifiee.py", "name": "Amplifiee", "desc": "4 modules d'amplification · GrapheDecision/CanalAsync/TraceMiel/MemoireHybride"},
+    {"file": "skills_amplifies.py", "name": "Skills Amplifies", "desc": "8 Skills Amplifies · Greffe sur les 24 Souverains"},
 ]
 
 CREW_DEF = [
@@ -378,7 +381,7 @@ def api_reine_etat():
 
 @app.route("/api/reine/skills")
 def api_reine_skills():
-    """Les 20 Skills Souverains avec metadonnees."""
+    """Les 32 Skills (24 Souverains + 8 Amplifies)."""
     skills = []
     for nom, info in SKILLS_SOUVERAINS.items():
         skills.append({
@@ -389,13 +392,34 @@ def api_reine_skills():
             "lois": info["lois"],
             "alveoles": info["alveoles"],
             "biologie": info["biologie"],
+            "type": "souverain",
         })
     skills.sort(key=lambda s: s["numero"])
+
+    amplifies = []
+    for nom, info in SKILLS_AMPLIFIES.items():
+        amplifies.append({
+            "nom": nom,
+            "numero": info["numero"],
+            "domaine_greffe": info["domaine_greffe"],
+            "module_source": info["module_source"],
+            "description": info["description"],
+            "loi": info["loi"],
+            "biologie": info["biologie"],
+            "amplifie": info["amplifie"],
+            "type": "amplifie",
+        })
+
     return jsonify({
-        "total": len(skills),
+        "total": len(skills) + len(amplifies),
+        "souverains": len(skills),
+        "amplifies": len(amplifies),
+        "ratio_par_loi": (len(skills) + len(amplifies)) / 8,
         "domaines": {nom: info for nom, info in DOMAINES.items()},
         "skills": skills,
-        "verification": verification_structurelle(),
+        "skills_amplifies": amplifies,
+        "verification_souverains": verification_structurelle(),
+        "verification_amplifies": verification_amplification(),
     })
 
 
@@ -506,6 +530,78 @@ def api_reine_parler():
     return jsonify(resultat)
 
 
+# === ROUTES REINE — 8 Skills Amplifies ===
+
+@app.route("/api/reine/cartographier", methods=["POST"])
+def api_reine_cartographier():
+    """[A1] Carte de la conscience de Nu."""
+    return jsonify(reine.cartographier())
+
+
+@app.route("/api/reine/polliniser_async", methods=["POST"])
+def api_reine_polliniser_async():
+    """[A2] Dispatch essaim asynchrone HMAC-signe."""
+    data = request.get_json(silent=True) or {}
+    tache = data.get("tache", "mission_generique")
+    agents = data.get("agents", ["worker-1"])
+    donnees = data.get("donnees")
+    priorite = data.get("priorite", 2)
+    return jsonify(reine.polliniser_async(tache, agents, donnees, priorite))
+
+
+@app.route("/api/reine/cristalliser", methods=["POST"])
+def api_reine_cristalliser():
+    """[A3] Promotion phi-based : ephemere -> permanent."""
+    data = request.get_json(silent=True) or {}
+    cles = data.get("cles")
+    return jsonify(reine.cristalliser(cles))
+
+
+@app.route("/api/reine/essaimer", methods=["POST"])
+def api_reine_essaimer():
+    """[A4] Decomposer, dispatcher, fusionner."""
+    data = request.get_json(silent=True) or {}
+    tache = data.get("tache", "")
+    sous_taches = data.get("sous_taches", [])
+    agents = data.get("agents")
+    if not tache or not sous_taches:
+        return jsonify({"error": "Parametres 'tache' et 'sous_taches' requis"}), 400
+    return jsonify(reine.essaimer_profond(tache, sous_taches, agents))
+
+
+@app.route("/api/reine/distiller", methods=["POST"])
+def api_reine_distiller():
+    """[A5] Quintessence du miel."""
+    data = request.get_json(silent=True) or {}
+    top_n = data.get("top_n", 5)
+    tag = data.get("tag")
+    auteur = data.get("auteur")
+    return jsonify(reine.distiller(top_n, tag, auteur))
+
+
+@app.route("/api/reine/fortifier", methods=["POST"])
+def api_reine_fortifier():
+    """[A6] Audit compliance ethique par replay."""
+    data = request.get_json(silent=True) or {}
+    focus = data.get("focus")
+    return jsonify(reine.fortifier(focus))
+
+
+@app.route("/api/reine/nourrir", methods=["POST"])
+def api_reine_nourrir():
+    """[A7] Gelee royale personnalisee pour un agent."""
+    data = request.get_json(silent=True) or {}
+    agent = data.get("agent", "worker-1")
+    mission = data.get("mission")
+    return jsonify(reine.nourrir(agent, mission))
+
+
+@app.route("/api/reine/enraciner", methods=["POST"])
+def api_reine_enraciner():
+    """[A8] Persistance totale — la Ruche survit a l'hiver."""
+    return jsonify(reine.enraciner())
+
+
 # === BUNKER — Mode defensif ===
 
 @app.route("/api/bunker/activer", methods=["POST"])
@@ -593,7 +689,7 @@ def boot_sequence():
     etat = reine.etat()
 
     log_event("REINE", f"Nu s'eveille. v{etat['version']}", "ok")
-    log_event("REINE", f"{etat['skills']} Skills Souverains. {etat['domaines']} Domaines.", "ok")
+    log_event("REINE", f"{etat['skills']} Skills ({etat['skills_souverains']} souverains + {etat['skills_amplifies']} amplifies). {etat['domaines']} Domaines.", "ok")
     log_event("NOYAU", f"Noyau Nu v{etat['noyau']['version']} — {etat['noyau']['battement']} battements", "ok")
     log_event("BOUCLIER", f"Bouclier v{etat['bouclier']['version']} — alerte {etat['bouclier']['niveau_alerte']}", "ok")
     log_event("MEMOIRE", f"Memoire v{etat['memoire']['version']} — {etat['memoire']['miel']['taille']} miel", "ok")
@@ -682,7 +778,8 @@ if __name__ == "__main__":
     total = len(MODULES_DEF)
     verif = verification_structurelle()
     print(f"    Modules  : {active}/{total} actifs")
-    print(f"    Skills   : {etat_boot['skills']}/24 {'OUI' if verif['vingt_quatre_check'] else 'NON'}")
+    verif_amp = verification_amplification()
+    print(f"    Skills   : {etat_boot['skills']}/32 (24+8) {'OUI' if verif['vingt_quatre_check'] and verif_amp['coherence'] else 'NON'}")
     print(f"    Lois     : {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}")
     print(f"    Bureau   : http://localhost:{port}")
     print(f"    API Reine: http://localhost:{port}/api/reine/etat")
