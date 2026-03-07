@@ -1,15 +1,5 @@
-# /etc/systemd/system/hive.service
-# HIVE.AI — Service systemd pour la Reine Nu
-# Swarmly SAS · 2026
-#
-# Installation :
-#   sudo cp deploy/hive.service /etc/systemd/system/
-#   sudo systemctl daemon-reload
-#   sudo systemctl enable hive
-#   sudo systemctl start hive
-
 [Unit]
-Description=HIVE.AI - Reine Nu - Bureau de Commandement
+Description=HIVE.AI - Reine Nu v0.3.0 - HIVE.WORK
 After=network.target
 
 [Service]

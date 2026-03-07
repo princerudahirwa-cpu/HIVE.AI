@@ -1,0 +1,29 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --hive-gold: #f5a623;
+  --hive-dark: #1a1a2e;
+  --hive-darker: #12121f;
+  --hive-surface: #1e1e32;
+  --hive-border: #2a2a44;
+  --hive-text: #e8e8f0;
+  --hive-muted: #8888aa;
+  --hive-user-bg: #2a2a4a;
+  --hive-assistant-bg: #1e1e32;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--hive-darker);
+  color: var(--hive-text);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+}

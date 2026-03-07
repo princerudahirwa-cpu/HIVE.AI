@@ -23,9 +23,10 @@ from conversation_reine import ConversationReine
 # === CONFIG ===
 HIVE_DIR = Path(__file__).parent
 MODULES_DIR = HIVE_DIR
+FRONTEND_DIR = HIVE_DIR / "frontend" / "dist"
 ECLOSION = datetime(2026, 5, 1, 0, 0, 0, tzinfo=timezone.utc)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 CORS(app)
 
 # === LA REINE S'EVEILLE ===
@@ -548,6 +549,39 @@ def boot_sequence():
         log_event("REINE", f"Voix heuristique (anthropic={etat_conv['anthropic_installe']}, cle={'oui' if etat_conv['active'] else 'non'})", "warn")
 
     log_event("HIVE", "Nous ne conquerons pas. Nous pollinisons.", "ok")
+
+    if FRONTEND_DIR.exists():
+        log_event("FRONTEND", f"HIVE.WORK UI servie depuis {FRONTEND_DIR}", "ok")
+    else:
+        log_event("FRONTEND", "frontend/dist/ absent — npm run build requis", "warn")
+
+
+# === FRONTEND — SPA React (HIVE.WORK) ===
+
+@app.route("/")
+def serve_frontend():
+    """Sert l'application HIVE.WORK."""
+    index = FRONTEND_DIR / "index.html"
+    if index.exists():
+        return send_file(str(index))
+    return jsonify({"message": "HIVE.WORK — frontend non build. Utilisez /api/status"}), 200
+
+
+@app.route("/<path:path>")
+def serve_static_or_spa(path):
+    """Sert les assets statiques ou redirige vers le SPA."""
+    # Ne pas intercepter les routes API
+    if path.startswith("api/"):
+        return jsonify({"error": "Route inconnue"}), 404
+    # Essayer de servir un fichier statique
+    file_path = FRONTEND_DIR / path
+    if file_path.exists() and file_path.is_file():
+        return send_from_directory(str(FRONTEND_DIR), path)
+    # Fallback SPA — renvoyer index.html
+    index = FRONTEND_DIR / "index.html"
+    if index.exists():
+        return send_file(str(index))
+    return jsonify({"error": "Fichier non trouve"}), 404
 
 
 if __name__ == "__main__":
