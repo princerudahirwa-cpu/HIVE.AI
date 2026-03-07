@@ -73,23 +73,34 @@ ROUTES_PUBLIQUES = {
 
 
 @app.before_request
-def verifier_acces_api():
-    """Bloque l'acces aux routes API internes pour le public."""
+def verifier_acces():
+    """Vitrine publique : seul / et /api/reine/parler sont visibles.
+    Tout le reste → Capitaine requis, sinon redirect silencieux vers /."""
+    from flask import redirect
     path = request.path
-    # Frontend et assets : toujours public
-    if not path.startswith("/api/") and path != "/bureau":
+
+    # --- Toujours public ---
+    # Frontend SPA (/, /assets/*)
+    if path == "/" or path.startswith("/assets/"):
         return
-    # Routes publiques explicites
+    # Unique endpoint API public
     if path in ROUTES_PUBLIQUES:
         return
-    # Bureau et API internes : Capitaine requis
+
+    # --- Capitaine requis pour tout le reste ---
     ip = request.remote_addr or ""
     if ip in BUREAU_IPS:
         return
     token = request.args.get("token", "") or request.headers.get("X-Hive-Token", "")
     if token and hmac.compare_digest(token, BUREAU_TOKEN):
         return
-    abort(403)
+
+    # --- Ni public, ni Capitaine → la vitrine, rien de plus ---
+    if path.startswith("/api/"):
+        # API interne : 403 sec, pas de detail
+        return jsonify({"error": "Non autorise"}), 403
+    # Tout autre chemin (/bureau, /modules, etc.) : redirect silencieux
+    return redirect("/")
 
 
 # === LA REINE S'EVEILLE ===
