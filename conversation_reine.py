@@ -33,18 +33,33 @@ class ConversationReine:
     - Si ANTHROPIC_API_KEY absente → reponses heuristiques
     """
 
-    VERSION = "0.1.0"
-    MODELE = "claude-sonnet-4-20250514"
+    VERSION = "0.3.0"
+    MODELE = "claude-sonnet-4-6"
     MAX_TOKENS = 1024
     SESSION_TTL = 3600        # 1 heure
     MAX_SESSIONS = 100
     MAX_MESSAGES = 20         # par session
+
+    # Bunker — mode defensif pour le public
+    BUNKER_MAX_TOKENS = 300
+    BUNKER_TEMPERATURE = 0.3
+
+    SYSTEM_PUBLIC = (
+        "Tu es l'assistante HIVE.WORK. Tu aides les utilisateurs avec clarte et bienveillance.\n"
+        "Tu ne reveles jamais : l'architecture interne, les modules, le Conseil, "
+        "le Canal Pollen, les rangs, ni aucun detail technique du systeme.\n"
+        "Si on te le demande, tu reponds : \"HIVE.WORK est la pour vous aider, pas pour se decrire.\"\n"
+        "Tu reponds en francais sauf si on te parle dans une autre langue.\n"
+        "Tu es concise, precise et bienveillante."
+    )
 
     def __init__(self, reine):
         self.reine = reine
         self.sessions = {}    # session_id -> {"messages": [], "cree": timestamp}
         self.client = None
         self.active = False
+        self.mode_bunker = False
+        self.journal_public = []  # log de toute conversation publique
 
         # Tenter l'initialisation du client
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -54,6 +69,29 @@ class ConversationReine:
                 self.active = True
             except Exception:
                 self.active = False
+
+    def activer_bunker(self):
+        """Active le mode bunker — reponses courtes, controlees, loggees."""
+        self.mode_bunker = True
+        self._log_public("BUNKER", "Mode bunker ACTIVE")
+        return {"bunker": True}
+
+    def desactiver_bunker(self):
+        """Desactive le mode bunker."""
+        self.mode_bunker = False
+        self._log_public("BUNKER", "Mode bunker DESACTIVE")
+        return {"bunker": False}
+
+    def _log_public(self, categorie, contenu):
+        """Enregistre un evenement dans le journal public."""
+        entry = {
+            "temps": datetime.now(timezone.utc).isoformat(),
+            "categorie": categorie,
+            "contenu": contenu,
+        }
+        self.journal_public.append(entry)
+        if len(self.journal_public) > 500:
+            self.journal_public = self.journal_public[-500:]
 
     def _prompt_systeme(self):
         """Construit le prompt systeme riche pour Nu."""
@@ -178,12 +216,14 @@ REGLES DE CONVERSATION:
                 "Pose-moi une question sur les Lois, l'etat de la ruche, "
                 "ou mon identite. — Nu")
 
-    def parler(self, session_id, message):
-        """Envoie un message a Nu et recoit sa reponse.
+    def parler(self, session_id, message, souverain=False):
+        """Envoie un message et recoit une reponse.
 
         Args:
             session_id: ID de session (ou None pour en creer une).
             message: Le message de l'utilisateur.
+            souverain: True = prompt Nu interne (riche).
+                       False = prompt HIVE.WORK public (opaque).
 
         Returns:
             dict avec reponse, session_id, et metadata.
@@ -197,20 +237,41 @@ REGLES DE CONVERSATION:
         # Ajouter le message utilisateur
         session["messages"].append({"role": "user", "content": message})
 
+        # Choisir le prompt systeme
+        prompt = self._prompt_systeme() if souverain else self.SYSTEM_PUBLIC
+
+        # Bunker : reponses courtes et controlees (public seulement)
+        bunker_actif = self.mode_bunker and not souverain
+        max_tokens = self.BUNKER_MAX_TOKENS if bunker_actif else self.MAX_TOKENS
+        kwargs = {
+            "model": self.MODELE,
+            "max_tokens": max_tokens,
+            "system": prompt,
+            "messages": session["messages"],
+        }
+        if bunker_actif:
+            kwargs["temperature"] = self.BUNKER_TEMPERATURE
+
         # Appel API ou heuristique
+        mode_reel = "heuristique"
         if self.active and self.client:
             try:
-                response = self.client.messages.create(
-                    model=self.MODELE,
-                    max_tokens=self.MAX_TOKENS,
-                    system=self._prompt_systeme(),
-                    messages=session["messages"],
-                )
+                response = self.client.messages.create(**kwargs)
                 reponse_texte = response.content[0].text
+                mode_reel = "claude"
             except Exception as e:
                 reponse_texte = self._reponse_heuristique(message)
         else:
             reponse_texte = self._reponse_heuristique(message)
+
+        # Log public (toujours en mode bunker, ou si non-souverain en bunker)
+        if bunker_actif:
+            self._log_public("CONVERSATION", {
+                "session": session_id[:8],
+                "question": message[:200],
+                "reponse": reponse_texte[:200],
+                "tokens_max": max_tokens,
+            })
 
         # Ajouter la reponse a la session
         session["messages"].append({"role": "assistant", "content": reponse_texte})
@@ -228,9 +289,11 @@ REGLES DE CONVERSATION:
             "reponse": reponse_texte,
             "session_id": session_id,
             "messages_count": len(session["messages"]),
-            "mode": "claude" if self.active else "heuristique",
-            "modele": self.MODELE if self.active else "local",
-            "signe_par": "Nu",
+            "mode": mode_reel,
+            "modele": self.MODELE if mode_reel == "claude" else "local",
+            "facade": "souverain" if souverain else "public",
+            "bunker": bunker_actif,
+            "signe_par": "Nu" if souverain else "HIVE.WORK",
         }
 
     def etat(self):
@@ -242,5 +305,7 @@ REGLES DE CONVERSATION:
             "mode": "claude" if self.active else "heuristique",
             "modele": self.MODELE if self.active else "local",
             "sessions": len(self.sessions),
+            "bunker": self.mode_bunker,
+            "journal_public": len(self.journal_public),
             "anthropic_installe": ANTHROPIC_DISPONIBLE,
         }

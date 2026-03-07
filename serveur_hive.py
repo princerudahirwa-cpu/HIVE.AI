@@ -168,6 +168,13 @@ def api_status():
     })
 
 
+@app.route("/api/archetypes")
+def api_archetypes():
+    """Les archetypes et leurs modeles Claude."""
+    from registre import ARCHETYPES
+    return jsonify(ARCHETYPES)
+
+
 @app.route("/api/modules")
 def api_modules():
     """État réel des modules Python."""
@@ -421,6 +428,30 @@ def api_reine_parler():
     resultat = conversation.parler(session_id, message)
     log_event("REINE", f"Parole: {message[:40]}... -> {resultat['mode']}", "info")
     return jsonify(resultat)
+
+
+# === BUNKER — Mode defensif ===
+
+@app.route("/api/bunker/activer", methods=["POST"])
+def api_bunker_activer():
+    """Active le mode bunker — reponses courtes, controlees, loggees."""
+    conversation.activer_bunker()
+    log_event("BOUCLIER", "Mode BUNKER active", "warn")
+    return jsonify({"bunker": True})
+
+
+@app.route("/api/bunker/desactiver", methods=["POST"])
+def api_bunker_desactiver():
+    """Desactive le mode bunker."""
+    conversation.desactiver_bunker()
+    log_event("BOUCLIER", "Mode BUNKER desactive", "ok")
+    return jsonify({"bunker": False})
+
+
+@app.route("/api/bunker/journal")
+def api_bunker_journal():
+    """Journal de toutes les conversations publiques en mode bunker."""
+    return jsonify(conversation.journal_public[-100:])
 
 
 # === ROUTES CORTEX — 6eme Organe ===

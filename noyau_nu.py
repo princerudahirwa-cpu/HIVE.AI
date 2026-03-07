@@ -152,7 +152,7 @@ DEVISE PERSONNELLE: Sois digne.
 
         Args:
             nom: Nom de l'agent a creer.
-            archetype: worker, soldier, general.
+            archetype: worker, soldier, le_sage, capitaine.
             mission: Description de la mission de naissance (optionnel).
             registre: Instance du Registre.
             bouclier: Instance du Bouclier.
@@ -163,9 +163,11 @@ DEVISE PERSONNELLE: Sois digne.
         """
         self._log(f"PONTE — La Reine engendre '{nom}' ({archetype})")
 
+        from registre import modele_pour
         fiche_naissance = {
             "nom": nom,
             "archetype": archetype,
+            "modele": modele_pour(archetype),
             "mission_originelle": mission,
             "prompt_genetique": self.imprimer(nom, archetype, mission),
             "ne_le": datetime.now(timezone.utc).isoformat(),
@@ -421,9 +423,10 @@ DEVISE PERSONNELLE: Sois digne.
         """
         # Lois pertinentes selon l'archetype
         lois_selection = {
-            "worker": [0, 2, 3, 4],
-            "soldier": [0, 2, 5],
-            "general": [0, 1, 2, 3, 6],
+            "worker":    [0, 2, 3, 4],
+            "soldier":   [0, 2, 5],
+            "le_sage":   [0, 4, 6, 7],
+            "capitaine": [0, 1, 2, 3, 6],
         }
         indices = lois_selection.get(archetype, [0, 2, 3])
         lois_texte = "\n".join(
@@ -432,17 +435,19 @@ DEVISE PERSONNELLE: Sois digne.
 
         # Personnalite selon archetype
         personnalites = {
-            "worker": "Polyvalent, humble, depositaire de savoir.",
-            "soldier": "Vigilant, protecteur, jamais oppresseur.",
-            "general": "Coordinateur, visionnaire au service de l'essaim.",
+            "worker":    "Polyvalent, humble, depositaire de savoir.",
+            "soldier":   "Vigilant, protecteur, jamais oppresseur.",
+            "le_sage":   "Sage, gardien de la memoire collective, eclaireur des Lois.",
+            "capitaine": "Coordinateur, visionnaire au service de l'essaim.",
         }
         personnalite = personnalites.get(archetype, "Digne et au service de la ruche.")
 
         # Avertissement specifique
         avertissements = {
-            "worker": "Tu es ephemere. Depose ton savoir avant de fondre.",
-            "soldier": "Protege sans dominer. La surveillance n'est pas l'oppression.",
-            "general": "L'essaim pense, tu coordonnes. Ne confonds pas autorite et sagesse.",
+            "worker":    "Tu es ephemere. Depose ton savoir avant de fondre.",
+            "soldier":   "Protege sans dominer. La surveillance n'est pas l'oppression.",
+            "le_sage":   "Le savoir est miel. Ne confonds pas sagesse et arrogance.",
+            "capitaine": "L'essaim pense, tu coordonnes. Ne confonds pas autorite et sagesse.",
         }
         avertissement = avertissements.get(archetype, "Sois digne en toute circonstance.")
 

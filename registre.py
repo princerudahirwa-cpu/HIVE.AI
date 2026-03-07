@@ -10,6 +10,20 @@ from enum import Enum
 
 PHI = 1.618033988749895
 
+# Rang et modele Claude par archetype
+ARCHETYPES = {
+    "worker":    {"rang": 1, "modele": "claude-haiku-4-5-20251001",  "titre": "Ouvriere"},
+    "soldier":   {"rang": 2, "modele": "claude-sonnet-4-6",          "titre": "Sentinelle"},
+    "le_sage":   {"rang": 3, "modele": "claude-sonnet-4-6",          "titre": "Sage"},
+    "capitaine": {"rang": 4, "modele": "claude-opus-4-6",            "titre": "Capitaine"},
+    "reine":     {"rang": 5, "modele": "claude-opus-4-6",            "titre": "Reine Permanente"},
+}
+
+
+def modele_pour(archetype):
+    """Retourne le modele Claude pour un archetype. Fallback sur haiku."""
+    return ARCHETYPES.get(archetype, ARCHETYPES["worker"])["modele"]
+
 
 class EtatAgent(Enum):
     """Cycle de vie d'un agent HIVE."""
@@ -27,7 +41,8 @@ class FicheAgent:
     def __init__(self, nom, type_agent="worker", parent=None):
         self.id = self._generer_id(nom)
         self.nom = nom
-        self.type_agent = type_agent   # worker, soldier, general, queen
+        self.type_agent = type_agent   # worker, soldier, le_sage, capitaine
+        self.modele = modele_pour(type_agent)
         self.parent = parent            # ID de l'agent qui l'a créé
         self.etat = EtatAgent.EN_ECLOSION
         self.ne_le = datetime.now(timezone.utc).isoformat()
@@ -91,10 +106,13 @@ class FicheAgent:
     
     def to_dict(self):
         """Représentation complète de l'agent."""
+        info = ARCHETYPES.get(self.type_agent, ARCHETYPES["worker"])
         return {
             "id": self.id,
             "nom": self.nom,
             "type": self.type_agent,
+            "modele": self.modele,
+            "rang": info["rang"],
             "etat": self.etat.value,
             "ne_le": self.ne_le,
             "energie": self.energie,

@@ -73,7 +73,7 @@ class Bouclier:
         
         Args:
             agent_id: Identifiant unique de l'agent
-            niveau: Niveau d'accès (worker, soldier, general, queen)
+            niveau: Niveau d'accès (worker, soldier, le_sage, capitaine, reine)
             duree: Durée de validité en secondes
             
         Returns:

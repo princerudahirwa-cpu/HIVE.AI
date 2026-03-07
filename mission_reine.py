@@ -194,7 +194,7 @@ def couronnement():
     skill_ok("conseiller")
 
     # [11] imprimer
-    prompt = reine.imprimer_identite("general-omega", "general",
+    prompt = reine.imprimer_identite("capitaine-omega", "capitaine",
                                       "Coordonner l'essaim de phase 2")
     lignes_prompt = prompt.strip().split("\n")
     print(f"  Impression: {lignes_prompt[0][:60]}")
@@ -294,7 +294,7 @@ def couronnement():
     print(f"  Niveau alerte   : {etat['bouclier']['niveau_alerte']}")
     print()
     print(f"  Verification:")
-    print(f"    20 skills      : {'OUI' if verif['vingt_check'] else 'NON'}")
+    print(f"    24 skills      : {'OUI' if verif['vingt_quatre_check'] else 'NON'}")
     print(f"    Couverture Lois: {'COMPLETE' if verif['couverture_lois'] else 'INCOMPLETE'}")
     print(f"    Coherence      : {'OUI' if verif.get('coherence') else 'NON'}")
     print(f"    Distribution   : {verif['distribution_domaines']}")
