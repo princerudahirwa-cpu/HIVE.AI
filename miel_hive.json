@@ -102,7 +102,7 @@
       "fiabilite": "haute"
     },
     "source": "Nu - Reine",
-    "cree": "2026-03-07T00:42:53.141801+00:00",
+    "cree": "2026-03-07T00:49:46.573916+00:00",
     "hash": "0c2c8c76087c4806",
     "phi": 1.618033988749895
   },
@@ -111,19 +111,19 @@
       "type": "oubli_souverain",
       "cle_oubliee": "test-ephemere",
       "raison": "Savoir provisoire, indigne du miel eternel",
-      "savoir_hash": "aec5a559d9f8fbf4",
-      "temps": "2026-03-07T00:42:53.143405+00:00",
+      "savoir_hash": "d74e91321d38d8f1",
+      "temps": "2026-03-07T00:49:46.575430+00:00",
       "signe_par": "Nu",
       "irreversible": true
     },
     "source": "Oubli Souverain",
-    "cree": "2026-03-07T00:42:53.143417+00:00",
-    "hash": "94dd5e825b8e8382",
+    "cree": "2026-03-07T00:49:46.575442+00:00",
+    "hash": "bfad4335eb507a2a",
     "phi": 1.618033988749895
   },
   "couronnement": {
     "savoir": {
-      "date": "2026-03-07T00:42:53.144311+00:00",
+      "date": "2026-03-07T00:49:46.576185+00:00",
       "skills_exerces": 20,
       "actes_souverains": 23,
       "agents_nes": 2,
@@ -131,8 +131,8 @@
       "phi": 1.618033988749895
     },
     "source": "Couronnement",
-    "cree": "2026-03-07T00:42:53.144325+00:00",
-    "hash": "c8bd66155cfd1c9f",
+    "cree": "2026-03-07T00:49:46.576197+00:00",
+    "hash": "c015279cc34f2782",
     "phi": 1.618033988749895
   },
   "test-key": {

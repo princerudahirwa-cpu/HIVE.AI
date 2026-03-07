@@ -9,10 +9,13 @@ v0.2.0 -- Branche vivante : chaque route interroge la Reine.
 import os
 import json
 import time
+import hmac
+import hashlib
 import importlib.util
 from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory, abort
 from flask_cors import CORS
 
 from reine import Reine
@@ -28,6 +31,66 @@ ECLOSION = datetime(2026, 5, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 app = Flask(__name__, static_folder=None)
 CORS(app)
+
+# === SECURITE — Protection Bureau de Commandement ===
+# Token secret : definir HIVE_BUREAU_TOKEN dans .env
+# Si absent, genere automatiquement au demarrage et affiche dans les logs
+BUREAU_TOKEN = os.environ.get("HIVE_BUREAU_TOKEN", "")
+if not BUREAU_TOKEN:
+    import secrets as _sec
+    BUREAU_TOKEN = _sec.token_hex(24)
+    print(f"\n  [SECURITE] Token Bureau genere : {BUREAU_TOKEN}")
+    print(f"  [SECURITE] Acces : /bureau?token={BUREAU_TOKEN}\n")
+
+# IPs autorisees sans token (localhost toujours autorise)
+BUREAU_IPS = {"127.0.0.1", "::1", "localhost"}
+_extra_ips = os.environ.get("HIVE_BUREAU_IPS", "")
+if _extra_ips:
+    BUREAU_IPS.update(ip.strip() for ip in _extra_ips.split(",") if ip.strip())
+
+
+def capitaine_requis(f):
+    """Decorateur : acces reserve au Capitaine (token ou IP locale)."""
+    @wraps(f)
+    def check(*args, **kwargs):
+        # IP locale autorisee
+        ip = request.remote_addr or ""
+        if ip in BUREAU_IPS:
+            return f(*args, **kwargs)
+        # Token dans query string ou header
+        token = request.args.get("token", "") or request.headers.get("X-Hive-Token", "")
+        if token and hmac.compare_digest(token, BUREAU_TOKEN):
+            return f(*args, **kwargs)
+        # Refuse
+        abort(403)
+    return check
+
+
+# Routes publiques (pas de token requis)
+ROUTES_PUBLIQUES = {
+    "/api/reine/parler",
+}
+
+
+@app.before_request
+def verifier_acces_api():
+    """Bloque l'acces aux routes API internes pour le public."""
+    path = request.path
+    # Frontend et assets : toujours public
+    if not path.startswith("/api/") and path != "/bureau":
+        return
+    # Routes publiques explicites
+    if path in ROUTES_PUBLIQUES:
+        return
+    # Bureau et API internes : Capitaine requis
+    ip = request.remote_addr or ""
+    if ip in BUREAU_IPS:
+        return
+    token = request.args.get("token", "") or request.headers.get("X-Hive-Token", "")
+    if token and hmac.compare_digest(token, BUREAU_TOKEN):
+        return
+    abort(403)
+
 
 # === LA REINE S'EVEILLE ===
 reine = Reine()
@@ -124,9 +187,10 @@ ALVEOLES = [
 
 # === ROUTES API ===
 
-@app.route("/")
-def index():
-    """Sert le Bureau de Commandement."""
+@app.route("/bureau")
+@capitaine_requis
+def bureau():
+    """Bureau de Commandement — acces Capitaine uniquement."""
     return send_file(HIVE_DIR / "bureau_hive_live.html")
 
 
