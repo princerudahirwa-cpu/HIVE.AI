@@ -532,6 +532,14 @@ def api_reine_parler():
     return jsonify(resultat)
 
 
+# === RAPPORT VIVANT — La voix de Nu ===
+
+@app.route("/api/reine/rapport_vivant", methods=["GET", "POST"])
+def api_reine_rapport_vivant():
+    """Nu parle. Pas du JSON — de la prose."""
+    return jsonify(reine.rapport_vivant())
+
+
 # === ROUTES PROTOCOLE ANCESTRAL — 5 Piliers ===
 
 @app.route("/api/protocole/etat")
