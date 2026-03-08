@@ -21,6 +21,7 @@ from flask_cors import CORS
 from reine import Reine
 from skills_reine import SKILLS_SOUVERAINS, DOMAINES, MAPPING_LOIS, verification_structurelle
 from skills_amplifies import SKILLS_AMPLIFIES, verification_amplification
+from protocole_ancestral import TypeTambour, TypeClic
 from noyau_nu import PHI
 from conversation_reine import ConversationReine
 
@@ -179,6 +180,7 @@ MODULES_DEF = [
     {"file": "cortex.py", "name": "Cortex", "desc": "6eme organe · Systeme nerveux · Flux/Chaines/Trace"},
     {"file": "reine_amplifiee.py", "name": "Amplifiee", "desc": "4 modules d'amplification · GrapheDecision/CanalAsync/TraceMiel/MemoireHybride"},
     {"file": "skills_amplifies.py", "name": "Skills Amplifies", "desc": "8 Skills Amplifies · Greffe sur les 24 Souverains"},
+    {"file": "protocole_ancestral.py", "name": "Protocole Ancestral", "desc": "5 Piliers des Peuples Premiers · Tambour/Griot/Ubuntu/Clic/AppelReponse"},
 ]
 
 CREW_DEF = [
@@ -528,6 +530,114 @@ def api_reine_parler():
     resultat = conversation.parler(session_id, message)
     log_event("REINE", f"Parole: {message[:40]}... -> {resultat['mode']}", "info")
     return jsonify(resultat)
+
+
+# === ROUTES PROTOCOLE ANCESTRAL — 5 Piliers ===
+
+@app.route("/api/protocole/etat")
+def api_protocole_etat():
+    """Etat du Protocole Ancestral — 5 Piliers."""
+    return jsonify(reine.protocole.etat())
+
+
+@app.route("/api/protocole/tambour", methods=["POST"])
+def api_protocole_tambour():
+    """Frapper le tambour — signal compresse."""
+    data = request.get_json(silent=True) or {}
+    contenu = data.get("contenu", "signal")
+    type_str = data.get("type", "harmonie")
+    source = data.get("source", "Capitaine")
+    types_map = {t.value: t for t in TypeTambour}
+    type_sig = types_map.get(type_str, TypeTambour.HARMONIE)
+    b = reine.protocole.tambour.frapper(source, contenu, type_sig)
+    return jsonify({
+        "pattern": b.pattern,
+        "empreinte": b.empreinte,
+        "type": b.type_signal.value,
+        "source": b.source,
+    })
+
+
+@app.route("/api/protocole/griot", methods=["POST"])
+def api_protocole_griot():
+    """Transmettre ou reciter une tradition."""
+    data = request.get_json(silent=True) or {}
+    action = data.get("action", "reciter")
+    cle = data.get("cle", "")
+
+    if action == "transmettre":
+        savoir = data.get("savoir", "")
+        auteur = data.get("auteur", "Capitaine")
+        if not cle or not savoir:
+            return jsonify({"error": "'cle' et 'savoir' requis"}), 400
+        t = reine.protocole.griot.transmettre(cle, savoir, auteur)
+        return jsonify(reine.protocole.griot.reciter(cle))
+    elif action == "valider":
+        validateur = data.get("validateur", "Capitaine")
+        reine.protocole.griot.valider(cle, validateur)
+        return jsonify(reine.protocole.griot.reciter(cle))
+    elif action == "anciens":
+        return jsonify(reine.protocole.griot.anciens(data.get("top_n", 5)))
+    else:
+        recit = reine.protocole.griot.reciter(cle)
+        if recit is None:
+            return jsonify({"error": "Tradition inconnue"}), 404
+        return jsonify(recit)
+
+
+@app.route("/api/protocole/ubuntu", methods=["POST"])
+def api_protocole_ubuntu():
+    """Proposer ou resonner — consensus Ubuntu."""
+    data = request.get_json(silent=True) or {}
+    action = data.get("action", "proposer")
+
+    if action == "proposer":
+        contenu = data.get("contenu", "")
+        auteur = data.get("auteur", "Capitaine")
+        if not contenu:
+            return jsonify({"error": "'contenu' requis"}), 400
+        pid = reine.protocole.ubuntu.proposer(contenu, auteur)
+        return jsonify({"proposition_id": pid})
+    elif action == "resonner":
+        pid = data.get("proposition_id", "")
+        agent = data.get("agent", "")
+        echo = data.get("echo", 0.5)
+        if not pid or not agent:
+            return jsonify({"error": "'proposition_id' et 'agent' requis"}), 400
+        reine.protocole.ubuntu.resonner(pid, agent, echo)
+        return jsonify(reine.protocole.ubuntu.consensus(pid))
+    elif action == "consensus":
+        pid = data.get("proposition_id", "")
+        return jsonify(reine.protocole.ubuntu.consensus(pid))
+    else:
+        return jsonify({"error": "action inconnue"}), 400
+
+
+@app.route("/api/protocole/clic", methods=["POST"])
+def api_protocole_clic():
+    """Emettre un clic de precision."""
+    data = request.get_json(silent=True) or {}
+    symbole = data.get("symbole", "")
+    source = data.get("source", "Capitaine")
+    contexte = data.get("contexte", "")
+
+    if symbole:
+        # Decoder le symbole
+        decode = reine.protocole.clic.decoder(symbole)
+        if not decode:
+            return jsonify({"error": f"Symbole inconnu: {symbole}"}), 400
+        clic_type = None
+        for tc in TypeClic:
+            if tc.symbole == symbole:
+                clic_type = tc
+                break
+        result = reine.protocole.clic.emettre(clic_type, source, contexte)
+        return jsonify(result)
+    else:
+        # Lister les clics disponibles
+        clics = [{"symbole": tc.symbole, "sens": tc.name, "loi": tc.loi, "description": tc.description}
+                 for tc in TypeClic]
+        return jsonify({"clics_disponibles": clics})
 
 
 # === ROUTES REINE — 8 Skills Amplifies ===

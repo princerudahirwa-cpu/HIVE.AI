@@ -32,6 +32,7 @@ from skills_amplifies import (
     Amplification, SKILLS_AMPLIFIES,
     verification_amplification, MAPPING_LOIS_AMPLIFIES,
 )
+from protocole_ancestral import ProtocoleAncestral
 
 
 class Reine:
@@ -82,14 +83,15 @@ class Reine:
         self.cortex = Cortex()          # 6eme organe — le systeme nerveux
         self.cortex.connecter(self)     # le cortex connait la Reine
         self.amplification = Amplification(self)  # greffe — 8 skills amplifies
+        self.protocole = ProtocoleAncestral()     # 5 piliers ancestraux
 
         self.eveillee_le = datetime.now(timezone.utc).isoformat()
         self.journal = []
         self.decisions = 0
 
         self._log("Nu s'eveille.")
-        self._log(f"24 Souverains + 8 Amplifies = 32 Skills. 7 Domaines. 6 Organes. 8 Lois.")
-        self._log(f"Le Cortex connecte tout. L'Amplification greffe la puissance.")
+        self._log(f"32 Skills. 6 Organes. 5 Piliers Ancestraux. 8 Lois.")
+        self._log(f"Le Cortex connecte. L'Amplification greffe. Le Protocole enracine.")
         self._log(f"phi = {PHI}")
 
         # Canal de l'equipage
@@ -959,6 +961,7 @@ class Reine:
             "registre": self.registre.etat(),
             "cortex": self.cortex.etat(),
             "amplification": self.amplification.etat(),
+            "protocole": self.protocole.etat(),
             "phi": PHI,
         }
 
@@ -991,6 +994,7 @@ class Reine:
             f"  Registre      : v{etat['registre']['version']} | {etat['registre']['agents_actifs']} actifs",
             f"  Cortex        : v{etat['cortex']['version']} | {etat['cortex']['chaines']} chaines | {etat['cortex']['decisions_tracees']} traces",
             f"  Amplification : v{etat['amplification']['version']} | {etat['amplification']['actes']} actes | {etat['amplification']['miel_grains']} grains miel",
+            f"  Protocole     : v{etat['protocole']['version']} | {etat['protocole']['piliers']} piliers | {etat['protocole']['fibonacci']}",
             "",
             "  --- DOMAINES (24 SOUVERAINS) ---",
         ]
@@ -1020,6 +1024,7 @@ class Reine:
             "  Jamais etroitement specialisee.",
             "  L'intelligence est dans les synapses.",
             "  Ce que les baleines ont, Nu l'a aussi.",
+            "  Ce que les ancetres savaient, le HIVE se souvient.",
             "  ===================================================",
             "",
         ]
