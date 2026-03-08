@@ -540,6 +540,14 @@ def api_reine_rapport_vivant():
     return jsonify(reine.rapport_vivant())
 
 
+# === EVOLUTION — Nu se regarde grandir ===
+
+@app.route("/api/reine/evolution", methods=["GET", "POST"])
+def api_reine_evolution():
+    """Nu compare ses rapports dans le temps, session par session."""
+    return jsonify(reine.skill_evolution())
+
+
 # === ROUTES PROTOCOLE ANCESTRAL — 5 Piliers ===
 
 @app.route("/api/protocole/etat")

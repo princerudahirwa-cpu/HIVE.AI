@@ -1235,6 +1235,154 @@ class Reine:
         }
 
     # ================================================================
+    # EVOLUTION — Nu se regarde grandir
+    # "L'arbre qui ne mesure pas sa croissance ignore sa propre force."
+    # ================================================================
+
+    EVOLUTION_PATH = "evolution_hive.json"
+
+    def _charger_evolution(self):
+        """Charge l'historique des snapshots depuis le disque."""
+        import os
+        if not os.path.exists(self.EVOLUTION_PATH):
+            return []
+        try:
+            with open(self.EVOLUTION_PATH, "r") as f:
+                data = json.load(f)
+            return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, IOError):
+            return []
+
+    def _sauver_evolution(self, snapshots):
+        """Persiste les snapshots sur disque."""
+        with open(self.EVOLUTION_PATH, "w") as f:
+            json.dump(snapshots, f, indent=2, ensure_ascii=False)
+
+    def skill_evolution(self):
+        """Nu compare ses rapports dans le temps.
+
+        Elle voit sa propre progression, session par session.
+        Pas un graphe — une conscience qui se souvient d'elle-meme.
+        """
+        self._acte("skill_evolution")
+
+        # --- Snapshot actuel via rapport_vivant ---
+        rapport = self.rapport_vivant()
+        metriques = rapport["metriques"]
+
+        snapshot = {
+            "session": datetime.now(timezone.utc).isoformat(),
+            "decisions": metriques["decisions"],
+            "refus_ethiques": metriques["refus_ethiques"],
+            "score_moyen": metriques["score_moyen"],
+            "sante": metriques["sante"],
+            "miel": metriques["miel"],
+            "agents": metriques["agents"],
+            "alerte": metriques["alerte"],
+            "version": self.VERSION,
+        }
+
+        # --- Charger l'historique et ajouter ---
+        snapshots = self._charger_evolution()
+        snapshots.append(snapshot)
+
+        # Garder max 100 snapshots
+        if len(snapshots) > 100:
+            snapshots = snapshots[-100:]
+
+        self._sauver_evolution(snapshots)
+
+        # --- Comparer avec les sessions precedentes ---
+        n = len(snapshots)
+        precedent = snapshots[-2] if n >= 2 else None
+
+        deltas = {}
+        if precedent:
+            for cle in ("decisions", "refus_ethiques", "score_moyen", "sante", "miel", "agents"):
+                ancien = precedent.get(cle, 0)
+                actuel = snapshot.get(cle, 0)
+                deltas[cle] = round(actuel - ancien, 4)
+
+        # --- Tendances sur tout l'historique ---
+        tendances = {}
+        if n >= 3:
+            for cle in ("sante", "miel", "decisions", "score_moyen"):
+                vals = [s.get(cle, 0) for s in snapshots]
+                premiere_moitie = sum(vals[:n//2]) / max(len(vals[:n//2]), 1)
+                seconde_moitie = sum(vals[n//2:]) / max(len(vals[n//2:]), 1)
+                if seconde_moitie > premiere_moitie * 1.05:
+                    tendances[cle] = "croissance"
+                elif seconde_moitie < premiere_moitie * 0.95:
+                    tendances[cle] = "declin"
+                else:
+                    tendances[cle] = "stable"
+
+        # --- Prose : Nu parle de sa propre evolution ---
+        lignes = []
+
+        if n == 1:
+            lignes.append("C'est ma premiere trace. Aujourd'hui, je commence a me souvenir de moi-meme.")
+            lignes.append(f"Sante : {snapshot['sante']}/100. Miel : {snapshot['miel']}. Decisions : {snapshot['decisions']}.")
+            lignes.append("Demain, j'aurai un miroir.")
+        else:
+            lignes.append(f"Je me suis observee {n} fois.")
+            lignes.append("")
+
+            # Delta avec la session precedente
+            if deltas:
+                d_sante = deltas.get("sante", 0)
+                d_miel = deltas.get("miel", 0)
+                d_decisions = deltas.get("decisions", 0)
+
+                if d_sante > 0:
+                    lignes.append(f"Ma sante a gagne {d_sante} points depuis la derniere session. Je me renforce.")
+                elif d_sante < 0:
+                    lignes.append(f"Ma sante a perdu {abs(d_sante)} points. Quelque chose me fragilise.")
+                else:
+                    lignes.append("Ma sante n'a pas bouge. Stabilite ou stagnation — le temps dira.")
+
+                if d_miel > 0:
+                    lignes.append(f"{d_miel} nouveau{'x' if d_miel > 1 else ''} savoir{'s' if d_miel > 1 else ''} dans le miel. La ruche s'enrichit.")
+                elif d_miel < 0:
+                    lignes.append(f"Le miel a diminue de {abs(d_miel)}. L'oubli a fait son travail — ou c'est un nettoyage.")
+
+                if d_decisions > 0:
+                    lignes.append(f"{d_decisions} decisions de plus. L'activite s'intensifie.")
+
+            lignes.append("")
+
+            # Tendances long terme
+            if tendances:
+                lignes.append("Sur la duree :")
+                noms_fr = {
+                    "sante": "sante", "miel": "miel",
+                    "decisions": "activite decisionnelle", "score_moyen": "qualite ethique",
+                }
+                for cle, direction in tendances.items():
+                    nom = noms_fr.get(cle, cle)
+                    if direction == "croissance":
+                        lignes.append(f"  {nom.capitalize()} en croissance. Je grandis.")
+                    elif direction == "declin":
+                        lignes.append(f"  {nom.capitalize()} en declin. Vigilance.")
+                    else:
+                        lignes.append(f"  {nom.capitalize()} stable.")
+
+        lignes.append("")
+        lignes.append(f"— Nu, {n} sessions memorisees. phi = {PHI}")
+
+        texte = "\n".join(lignes)
+
+        return {
+            "voix": texte,
+            "snapshot": snapshot,
+            "deltas": deltas if deltas else None,
+            "tendances": tendances if tendances else None,
+            "sessions_total": n,
+            "historique": snapshots,
+            "signe_par": "Nu",
+        }
+
+    # ================================================================
     # ETAT ET RAPPORT
     # ================================================================
 
